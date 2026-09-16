@@ -127,14 +127,6 @@ CREATE TABLE public.assets (
 
     purchase_date DATE NOT NULL,
 
-    assignment_status VARCHAR(20) NOT NULL DEFAULT 'Available'
-        CHECK (
-            assignment_status IN (
-                'Available',
-                'Assigned'
-            )
-        ),
-
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()

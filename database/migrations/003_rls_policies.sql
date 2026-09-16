@@ -25,10 +25,24 @@ ALTER TABLE public.asset_assignments
 
 
 -- ---------------------------------------------------------
+-- Private Schema
+-- Contains internal authorization helper functions that
+-- should not be exposed through the Data API.
+-- ---------------------------------------------------------
+
+CREATE SCHEMA IF NOT EXISTS private;
+
+REVOKE ALL ON SCHEMA private FROM PUBLIC;
+
+GRANT USAGE ON SCHEMA private TO authenticated;
+
+
+
+-- ---------------------------------------------------------
 -- Authorization Helper Functions
 -- ---------------------------------------------------------
 
-CREATE OR REPLACE FUNCTION public.is_administrator()
+CREATE OR REPLACE FUNCTION private.is_administrator()
 RETURNS BOOLEAN
 LANGUAGE sql
 SECURITY DEFINER
@@ -43,9 +57,9 @@ AS $$
     );
 $$;
 
-REVOKE ALL ON FUNCTION public.is_administrator() FROM PUBLIC;
+REVOKE ALL ON FUNCTION private.is_administrator() FROM PUBLIC;
 
-GRANT EXECUTE ON FUNCTION public.is_administrator()
+GRANT EXECUTE ON FUNCTION private.is_administrator()
 TO authenticated;
 
 
@@ -68,7 +82,7 @@ ON public.profiles
 FOR SELECT
 TO authenticated
 USING (
-    (SELECT public.is_administrator())
+    (SELECT private.is_administrator())
 );
 
 
@@ -78,10 +92,10 @@ ON public.profiles
 FOR UPDATE
 TO authenticated
 USING (
-    (SELECT public.is_administrator())
+    (SELECT private.is_administrator())
 )
 WITH CHECK (
-    (SELECT public.is_administrator())
+    (SELECT private.is_administrator())
 );
 
 
@@ -105,7 +119,7 @@ ON public.tickets
 FOR SELECT
 TO authenticated
 USING (
-    (SELECT public.is_administrator())
+    (SELECT private.is_administrator())
 );
 
 
@@ -124,10 +138,10 @@ ON public.tickets
 FOR UPDATE
 TO authenticated
 USING (
-    (SELECT public.is_administrator())
+    (SELECT private.is_administrator())
 )
 WITH CHECK (
-    (SELECT public.is_administrator())
+    (SELECT private.is_administrator())
 );
 
 
@@ -142,7 +156,7 @@ ON public.ticket_notes
 FOR SELECT
 TO authenticated
 USING (
-    (SELECT public.is_administrator())
+    (SELECT private.is_administrator())
 );
 
 CREATE POLICY "Administrators can create ticket notes"
@@ -150,7 +164,7 @@ ON public.ticket_notes
 FOR INSERT
 TO authenticated
 WITH CHECK (
-    (SELECT public.is_administrator())
+    (SELECT private.is_administrator())
     AND admin_user_id = (SELECT auth.uid())
 );
 
@@ -181,7 +195,7 @@ ON public.assets
 FOR SELECT
 TO authenticated
 USING (
-    (SELECT public.is_administrator())
+    (SELECT private.is_administrator())
 );
 
 CREATE POLICY "Administrators can create assets"
@@ -189,7 +203,7 @@ ON public.assets
 FOR INSERT
 TO authenticated
 WITH CHECK (
-    (SELECT public.is_administrator())
+    (SELECT private.is_administrator())
 );
 
 CREATE POLICY "Administrators can update assets"
@@ -197,10 +211,10 @@ ON public.assets
 FOR UPDATE
 TO authenticated
 USING (
-    (SELECT public.is_administrator())
+    (SELECT private.is_administrator())
 )
 WITH CHECK (
-    (SELECT public.is_administrator())
+    (SELECT private.is_administrator())
 );
 
 CREATE POLICY "Administrators can delete assets"
@@ -208,7 +222,7 @@ ON public.assets
 FOR DELETE
 TO authenticated
 USING (
-    (SELECT public.is_administrator())
+    (SELECT private.is_administrator())
 );
 
 
@@ -231,7 +245,7 @@ ON public.asset_assignments
 FOR SELECT
 TO authenticated
 USING (
-    (SELECT public.is_administrator())
+    (SELECT private.is_administrator())
 );
 
 CREATE POLICY "Administrators can create asset assignments"
@@ -239,7 +253,7 @@ ON public.asset_assignments
 FOR INSERT
 TO authenticated
 WITH CHECK (
-    (SELECT public.is_administrator())
+    (SELECT private.is_administrator())
 );
 
 CREATE POLICY "Administrators can update asset assignments"
@@ -247,8 +261,8 @@ ON public.asset_assignments
 FOR UPDATE
 TO authenticated
 USING (
-    (SELECT public.is_administrator())
+    (SELECT private.is_administrator())
 )
 WITH CHECK (
-    (SELECT public.is_administrator())
+    (SELECT private.is_administrator())
 );

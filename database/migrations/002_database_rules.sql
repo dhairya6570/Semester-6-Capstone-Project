@@ -141,6 +141,8 @@ BEGIN
 END;
 $$;
 
+REVOKE ALL ON FUNCTION public.handle_new_user() FROM PUBLIC;
+
 CREATE TRIGGER trg_create_profile_after_signup
     AFTER INSERT ON auth.users
     FOR EACH ROW

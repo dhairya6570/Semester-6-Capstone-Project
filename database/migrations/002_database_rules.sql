@@ -111,3 +111,37 @@ CREATE TRIGGER trg_assets_set_asset_code
     BEFORE INSERT ON public.assets
     FOR EACH ROW
     EXECUTE FUNCTION public.set_asset_code();
+
+
+-- ---------------------------------------------------------
+-- New User Profile Trigger
+-- Automatically creates an Employee profile when a new
+-- Supabase Auth user account is created.
+-- ---------------------------------------------------------
+
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+    INSERT INTO public.profiles (
+        id,
+        full_name,
+        role
+    )
+    VALUES (
+        NEW.id,
+        COALESCE(NEW.raw_user_meta_data ->> 'full_name', ''),
+        'Employee'
+    );
+
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER trg_create_profile_after_signup
+    AFTER INSERT ON auth.users
+    FOR EACH ROW
+    EXECUTE FUNCTION public.handle_new_user();

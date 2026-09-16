@@ -105,7 +105,7 @@ CREATE TABLE public.ticket_notes (
 CREATE TABLE public.assets (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 
-    asset_code VARCHAR(20) UNIQUE,
+    asset_code VARCHAR(20) NOT NULL UNIQUE,
 
     asset_name VARCHAR(100) NOT NULL,
 

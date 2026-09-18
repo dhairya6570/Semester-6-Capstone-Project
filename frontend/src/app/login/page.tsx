@@ -1,4 +1,11 @@
+"use client";
+
+import { useState } from "react";
+
 export default function LoginPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
   return (
     <main>
       <h1>Login</h1>
@@ -13,6 +20,8 @@ export default function LoginPage() {
             type="email"
             autoComplete="email"
             required
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
           />
         </div>
 
@@ -24,6 +33,8 @@ export default function LoginPage() {
             type="password"
             autoComplete="current-password"
             required
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
           />
         </div>
 

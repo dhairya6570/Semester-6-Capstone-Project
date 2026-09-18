@@ -13,4 +13,13 @@ describe("Login credential validation", () => {
       password: "Test@1234",
     });
   });
+
+  test("rejects login credentials when email is missing", () => {
+    const result = validateLoginCredentials(
+        "",
+        "Test@1234"
+    );
+
+    expect(result).toBeNull();
+  });
 });

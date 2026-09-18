@@ -1,17 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { FormEvent, useState } from "react";
+import { login } from "@/lib/api/auth";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    setError("");
+    setSuccessMessage("");
+    setIsLoading(true);
+
+    try {
+      await login(email, password);
+      setSuccessMessage("Login successful.");
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Unable to log in."
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   return (
     <main>
       <h1>Login</h1>
       <p>Sign in to the IT Asset & Support Ticket Management System.</p>
 
-      <form>
+      <form onSubmit={handleSubmit}>
         <div>
           <label htmlFor="email">Email</label>
           <input
@@ -38,7 +63,21 @@ export default function LoginPage() {
           />
         </div>
 
-        <button type="submit">Sign In</button>
+        {error && (
+          <p role="alert">
+            {error}
+          </p>
+        )}
+
+        {successMessage && (
+          <p role="status">
+            {successMessage}
+          </p>
+        )}
+
+        <button type="submit" disabled={isLoading}>
+          {isLoading ? "Signing In..." : "Sign In"}
+        </button>
       </form>
     </main>
   );

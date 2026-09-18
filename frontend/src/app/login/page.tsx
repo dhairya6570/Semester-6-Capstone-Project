@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { getSession, login } from "@/lib/api/auth";
+import { getSession, login, logout } from "@/lib/api/auth";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -26,7 +26,29 @@ export default function LoginPage() {
   }
 
   checkSession();
-}, []);
+    }, []);
+
+    async function handleLogout() {
+    setError("");
+    setSuccessMessage("");
+    setIsLoading(true);
+
+    try {
+        await logout();
+
+        setEmail("");
+        setPassword("");
+        setSuccessMessage("Logout successful.");
+    } catch (error) {
+        setError(
+        error instanceof Error
+            ? error.message
+            : "Unable to log out."
+        );
+    } finally {
+        setIsLoading(false);
+    }
+    }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -95,6 +117,14 @@ export default function LoginPage() {
 
         <button type="submit" disabled={isLoading}>
           {isLoading ? "Signing In..." : "Sign In"}
+        </button>
+
+        <button
+            type="button"
+            onClick={handleLogout}
+            disabled={isLoading}
+        >
+            Log Out
         </button>
       </form>
     </main>

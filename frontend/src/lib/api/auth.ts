@@ -61,3 +61,16 @@ export async function getSession(): Promise<SessionResponse> {
 
   return data;
 }
+
+export async function logout(): Promise<void> {
+  const response = await fetch(`${API_URL}/api/auth/logout`, {
+    method: "POST",
+    credentials: "include",
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error || "Unable to log out.");
+  }
+}

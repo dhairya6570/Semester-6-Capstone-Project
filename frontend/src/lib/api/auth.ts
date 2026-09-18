@@ -10,6 +10,11 @@ export interface LoginResponse {
   user: AuthUser;
 }
 
+export interface SessionResponse {
+  authenticated: boolean;
+  user: AuthUser | null;
+}
+
 export async function login(
   email: string,
   password: string
@@ -30,6 +35,28 @@ export async function login(
 
   if (!response.ok) {
     throw new Error(data.error || "Unable to log in.");
+  }
+
+  return data;
+}
+
+export async function getSession(): Promise<SessionResponse> {
+  const response = await fetch(`${API_URL}/api/auth/session`, {
+    method: "GET",
+    credentials: "include",
+  });
+
+  const data = await response.json();
+
+  if (response.status === 401) {
+    return {
+      authenticated: false,
+      user: null,
+    };
+  }
+
+  if (!response.ok) {
+    throw new Error(data.error || "Unable to verify session.");
   }
 
   return data;

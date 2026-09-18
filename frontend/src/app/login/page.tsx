@@ -11,44 +11,44 @@ export default function LoginPage() {
   const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
-  async function checkSession() {
-    try {
-      const session = await getSession();
+    async function checkSession() {
+      try {
+        const session = await getSession();
 
-      if (session.authenticated && session.user) {
-        setSuccessMessage(
-          `Already signed in as ${session.user.email}.`
-        );
+        if (session.authenticated && session.user) {
+          setSuccessMessage(
+            `Already signed in as ${session.user.email} (${session.user.role}).`
+          );
+        }
+      } catch {
+        setError("Unable to verify the current session.");
       }
-    } catch {
-      setError("Unable to verify the current session.");
     }
-  }
 
-  checkSession();
-    }, []);
+    checkSession();
+  }, []);
 
-    async function handleLogout() {
+  async function handleLogout() {
     setError("");
     setSuccessMessage("");
     setIsLoading(true);
 
     try {
-        await logout();
+      await logout();
 
-        setEmail("");
-        setPassword("");
-        setSuccessMessage("Logout successful.");
+      setEmail("");
+      setPassword("");
+      setSuccessMessage("Logout successful.");
     } catch (error) {
-        setError(
+      setError(
         error instanceof Error
-            ? error.message
-            : "Unable to log out."
-        );
+          ? error.message
+          : "Unable to log out."
+      );
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
-    }
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -120,11 +120,11 @@ export default function LoginPage() {
         </button>
 
         <button
-            type="button"
-            onClick={handleLogout}
-            disabled={isLoading}
+          type="button"
+          onClick={handleLogout}
+          disabled={isLoading}
         >
-            Log Out
+          Log Out
         </button>
       </form>
     </main>

@@ -1,8 +1,11 @@
 import { API_URL } from "@/lib/api/config";
 
+export type UserRole = "Admin" | "Employee";
+
 export interface AuthUser {
   id: string;
   email: string;
+  role?: UserRole;
 }
 
 export interface LoginResponse {

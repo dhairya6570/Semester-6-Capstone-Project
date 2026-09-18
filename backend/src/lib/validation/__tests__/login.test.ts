@@ -22,4 +22,15 @@ describe("Login credential validation", () => {
 
     expect(result).toBeNull();
   });
+
+  test("rejects login credentials when password is missing", () => {
+    const result = validateLoginCredentials(
+        "employee@example.com",
+        ""
+    );
+
+    expect(result).toBeNull();  
+  });
+
+  
 });

@@ -6,5 +6,12 @@ describe("Password complexity validation", () => {
     const password = "Test@1234";
 
     expect(isPasswordValid(password)).toBe(true);
-  });
+    });
+  
+  test("UT-02: rejects a password missing a special character", () => {
+    const password = "Test1234";
+
+    expect(isPasswordValid(password)).toBe(false);
+    });
+
 });

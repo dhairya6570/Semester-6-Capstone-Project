@@ -1,3 +1,4 @@
+import { describe, expect, test } from "@jest/globals";
 import { isPasswordValid } from "../password";
 
 describe("Password complexity validation", () => {

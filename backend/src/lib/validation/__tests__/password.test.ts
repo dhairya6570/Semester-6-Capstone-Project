@@ -13,5 +13,12 @@ describe("Password complexity validation", () => {
 
     expect(isPasswordValid(password)).toBe(false);
     });
+    
+  test("UT-03: rejects a password shorter than eight characters", () => {
+    const password = "Te@123";
+
+    expect(isPasswordValid(password)).toBe(false);
+    });
+
 
 });

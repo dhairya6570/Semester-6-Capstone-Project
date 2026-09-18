@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase/client";
+import { createSupabaseClient } from "@/lib/supabase/client";
 
 export async function GET() {
   try {
+    const supabase = createSupabaseClient();
     const { error } = await supabase
       .from("profiles")
       .select("id")

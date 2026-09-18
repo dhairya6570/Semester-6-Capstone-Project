@@ -1,7 +1,7 @@
 "use client";
 
-import { FormEvent, useState } from "react";
-import { login } from "@/lib/api/auth";
+import { FormEvent, useEffect, useState } from "react";
+import { getSession, login } from "@/lib/api/auth";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -9,6 +9,24 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+
+  useEffect(() => {
+  async function checkSession() {
+    try {
+      const session = await getSession();
+
+      if (session.authenticated && session.user) {
+        setSuccessMessage(
+          `Already signed in as ${session.user.email}.`
+        );
+      }
+    } catch {
+      setError("Unable to verify the current session.");
+    }
+  }
+
+  checkSession();
+}, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

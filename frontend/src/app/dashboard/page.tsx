@@ -18,6 +18,11 @@ export default function DashboardPage() {
           return;
         }
 
+        if (session.user.role !== "Employee") {
+          router.replace("/login");
+          return;
+        }
+
         setIsCheckingSession(false);
       } catch {
         router.replace("/login");

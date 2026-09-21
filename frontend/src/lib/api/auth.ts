@@ -1,6 +1,6 @@
 import { API_URL } from "@/lib/api/config";
 
-export type UserRole = "Admin" | "Employee";
+export type UserRole = "Administrator" | "Employee";
 
 export interface AuthUser {
   id: string;

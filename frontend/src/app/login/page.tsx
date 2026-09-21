@@ -1,9 +1,11 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { getSession, login, logout } from "@/lib/api/auth";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -17,7 +19,7 @@ export default function LoginPage() {
 
         if (session.authenticated && session.user) {
           setSuccessMessage(
-            `Already signed in as ${session.user.email} (${session.user.role}).`
+            `Already signed in as ${session.user.email} (${session.user.role}).`,
           );
         }
       } catch {
@@ -28,7 +30,7 @@ export default function LoginPage() {
     checkSession();
   }, []);
 
-  async function handleLogout() {
+    async function handleLogout() {
     setError("");
     setSuccessMessage("");
     setIsLoading(true);
@@ -58,14 +60,27 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      await login(email, password);
-      setSuccessMessage("Login successful.");
+        await login(email, password);
+
+        const session = await getSession();
+
+        if (!session.authenticated || !session.user) {
+            throw new Error("Unable to verify authenticated session.");
+        }
+
+        if (session.user.role === "Administrator") {
+            router.replace("/admin");
+            return;
+        }
+
+        if (session.user.role === "Employee") {
+            router.replace("/dashboard");
+            return;
+        }
+
+        throw new Error("Unable to determine user role.");
     } catch (error) {
-      setError(
-        error instanceof Error
-          ? error.message
-          : "Unable to log in."
-      );
+      setError(error instanceof Error ? error.message : "Unable to log in.");
     } finally {
       setIsLoading(false);
     }
@@ -103,27 +118,15 @@ export default function LoginPage() {
           />
         </div>
 
-        {error && (
-          <p role="alert">
-            {error}
-          </p>
-        )}
+        {error && <p role="alert">{error}</p>}
 
-        {successMessage && (
-          <p role="status">
-            {successMessage}
-          </p>
-        )}
+        {successMessage && <p role="status">{successMessage}</p>}
 
         <button type="submit" disabled={isLoading}>
           {isLoading ? "Signing In..." : "Sign In"}
         </button>
 
-        <button
-          type="button"
-          onClick={handleLogout}
-          disabled={isLoading}
-        >
+        <button type="button" onClick={handleLogout} disabled={isLoading}>
           Log Out
         </button>
       </form>

@@ -173,6 +173,16 @@
       "name": "API-04 - Successful Admin User Creation",
       "event": [
         {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const uniqueEmail = `postman.employee.${Date.now()}@test.com`;",
+              "pm.collectionVariables.set(\"testUserEmail\", uniqueEmail);"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
           "listen": "test",
           "script": {
             "exec": [
@@ -187,7 +197,7 @@
               "",
               "pm.test(\"API-04: creates Employee account\", function () {",
               "    const json = pm.response.json();",
-              "    pm.expect(json.user.email).to.eql(\"postman.employee@test.com\");",
+              "    pm.expect(json.user.email).to.eql(pm.collectionVariables.get(\"testUserEmail\"));",
               "    pm.expect(json.user.role).to.eql(\"Employee\");",
               "});"
             ],
@@ -205,7 +215,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"fullName\": \"Postman Employee\",\n  \"email\": \"postman.employee@test.com\",\n  \"role\": \"Employee\",\n  \"password\": \"Test@1234\"\n}"
+          "raw": "{\n  \"fullName\": \"Postman Employee\",\n  \"email\": \"{{testUserEmail}}\",\n  \"role\": \"Employee\",\n  \"password\": \"Test@1234\"\n}"
         },
         "url": {
           "raw": "http://localhost:3001/api/admin/users",
@@ -246,7 +256,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"fullName\": \"Duplicate Employee\",\n  \"email\": \"postman.employee@test.com\",\n  \"role\": \"Employee\",\n  \"password\": \"Test@1234\"\n}"
+          "raw": "{\n  \"fullName\": \"Duplicate Employee\",\n  \"email\": \"{{testUserEmail}}\",\n  \"role\": \"Employee\",\n  \"password\": \"Test@1234\"\n}"
         },
         "url": {
           "raw": "http://localhost:3001/api/admin/users",
@@ -254,6 +264,82 @@
           "host": ["localhost"],
           "port": "3001",
           "path": ["api", "admin", "users"]
+        }
+      }
+    },
+    {
+      "name": "Setup - Employee Login for Profile",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Employee login for profile succeeds\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"employee@test.com\",\n  \"password\": \"Test@1234\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3001/api/auth/login",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3001",
+          "path": ["api", "auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "API-06 - View Own Profile",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"API-06: returns HTTP 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"API-06: returns authenticated employee profile\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.user.email).to.eql(\"employee@test.com\");",
+              "    pm.expect(json.user.role).to.eql(\"Employee\");",
+              "});",
+              "",
+              "pm.test(\"API-06: returns required profile fields\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.user).to.have.property(\"id\");",
+              "    pm.expect(json.user).to.have.property(\"fullName\");",
+              "    pm.expect(json.user).to.have.property(\"createdAt\");",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3001/api/profile",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3001",
+          "path": ["api", "profile"]
         }
       }
     }

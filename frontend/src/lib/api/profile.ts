@@ -27,3 +27,34 @@ export async function getProfile(): Promise<ProfileResponse> {
 
   return data;
 }
+
+export interface UpdatePasswordResponse {
+  message: string;
+}
+
+export async function updatePassword(
+  currentPassword: string,
+  newPassword: string,
+  confirmPassword: string
+): Promise<UpdatePasswordResponse> {
+  const response = await fetch(`${API_URL}/api/profile/password`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify({
+      currentPassword,
+      newPassword,
+      confirmPassword,
+    }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error || "Unable to update password.");
+  }
+
+  return data;
+}

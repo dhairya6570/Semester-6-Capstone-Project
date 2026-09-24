@@ -342,6 +342,83 @@
           "path": ["api", "profile"]
         }
       }
+    },
+    {
+      "name": "Setup - Login Test User for Password Update",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Test user login for password update succeeds\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{testUserEmail}}\",\n  \"password\": \"Test@1234\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3001/api/auth/login",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3001",
+          "path": ["api", "auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "API-07 - Successful Password Update",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"API-07: returns HTTP 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"API-07: returns successful password update message\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.message).to.eql(\"Password updated successfully.\");",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"currentPassword\": \"Test@1234\",\n  \"newPassword\": \"Updated@1234\",\n  \"confirmPassword\": \"Updated@1234\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3001/api/profile/password",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3001",
+          "path": ["api", "profile", "password"]
+        }
+      }
     }
   ]
 }

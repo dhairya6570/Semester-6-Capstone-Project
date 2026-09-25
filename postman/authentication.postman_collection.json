@@ -1,7 +1,7 @@
 {
   "info": {
-    "name": "IT Asset Support Ticket Management - Authentication",
-    "description": "Automated Week 2 authentication API tests.",
+    "name": "IT Asset Support Ticket Management - Authentication and User Management",
+    "description": "Automated Week 2 and Week 3 authentication and user management API tests.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -45,15 +45,9 @@
         "url": {
           "raw": "http://localhost:3001/api/auth/login",
           "protocol": "http",
-          "host": [
-            "localhost"
-          ],
+          "host": ["localhost"],
           "port": "3001",
-          "path": [
-            "api",
-            "auth",
-            "login"
-          ]
+          "path": ["api", "auth", "login"]
         }
       }
     },
@@ -92,15 +86,9 @@
         "url": {
           "raw": "http://localhost:3001/api/auth/login",
           "protocol": "http",
-          "host": [
-            "localhost"
-          ],
+          "host": ["localhost"],
           "port": "3001",
-          "path": [
-            "api",
-            "auth",
-            "login"
-          ]
+          "path": ["api", "auth", "login"]
         }
       }
     },
@@ -139,15 +127,296 @@
         "url": {
           "raw": "http://localhost:3001/api/auth/login",
           "protocol": "http",
-          "host": [
-            "localhost"
-          ],
+          "host": ["localhost"],
           "port": "3001",
-          "path": [
-            "api",
-            "auth",
-            "login"
-          ]
+          "path": ["api", "auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "Setup - Administrator Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Administrator login succeeds\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@test.com\",\n  \"password\": \"Test@123\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3001/api/auth/login",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3001",
+          "path": ["api", "auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "API-04 - Successful Admin User Creation",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const uniqueEmail = `postman.employee.${Date.now()}@test.com`;",
+              "pm.collectionVariables.set(\"testUserEmail\", uniqueEmail);"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"API-04: returns HTTP 201\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "pm.test(\"API-04: returns successful creation message\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.message).to.eql(\"User account created successfully.\");",
+              "});",
+              "",
+              "pm.test(\"API-04: creates Employee account\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.user.email).to.eql(pm.collectionVariables.get(\"testUserEmail\"));",
+              "    pm.expect(json.user.role).to.eql(\"Employee\");",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"fullName\": \"Postman Employee\",\n  \"email\": \"{{testUserEmail}}\",\n  \"role\": \"Employee\",\n  \"password\": \"Test@1234\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3001/api/admin/users",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3001",
+          "path": ["api", "admin", "users"]
+        }
+      }
+    },
+    {
+      "name": "API-05 - Duplicate Email",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"API-05: returns HTTP 409\", function () {",
+              "    pm.response.to.have.status(409);",
+              "});",
+              "",
+              "pm.test(\"API-05: returns duplicate email error\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.error).to.eql(\"A user with this email already exists.\");",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"fullName\": \"Duplicate Employee\",\n  \"email\": \"{{testUserEmail}}\",\n  \"role\": \"Employee\",\n  \"password\": \"Test@1234\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3001/api/admin/users",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3001",
+          "path": ["api", "admin", "users"]
+        }
+      }
+    },
+    {
+      "name": "Setup - Employee Login for Profile",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Employee login for profile succeeds\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"employee@test.com\",\n  \"password\": \"Test@1234\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3001/api/auth/login",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3001",
+          "path": ["api", "auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "API-06 - View Own Profile",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"API-06: returns HTTP 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"API-06: returns authenticated employee profile\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.user.email).to.eql(\"employee@test.com\");",
+              "    pm.expect(json.user.role).to.eql(\"Employee\");",
+              "});",
+              "",
+              "pm.test(\"API-06: returns required profile fields\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.user).to.have.property(\"id\");",
+              "    pm.expect(json.user).to.have.property(\"fullName\");",
+              "    pm.expect(json.user).to.have.property(\"createdAt\");",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3001/api/profile",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3001",
+          "path": ["api", "profile"]
+        }
+      }
+    },
+    {
+      "name": "Setup - Login Test User for Password Update",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Test user login for password update succeeds\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{testUserEmail}}\",\n  \"password\": \"Test@1234\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3001/api/auth/login",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3001",
+          "path": ["api", "auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "API-07 - Successful Password Update",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"API-07: returns HTTP 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"API-07: returns successful password update message\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.message).to.eql(\"Password updated successfully.\");",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"currentPassword\": \"Test@1234\",\n  \"newPassword\": \"Updated@1234\",\n  \"confirmPassword\": \"Updated@1234\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3001/api/profile/password",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3001",
+          "path": ["api", "profile", "password"]
         }
       }
     }

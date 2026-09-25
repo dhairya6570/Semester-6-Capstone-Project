@@ -91,7 +91,7 @@ export default function LoginPage() {
       <h1>Login</h1>
       <p>Sign in to the IT Asset & Support Ticket Management System.</p>
 
-      <form onSubmit={handleSubmit}>
+      <form method="post" onSubmit={handleSubmit}>
         <div>
           <label htmlFor="email">Email</label>
           <input

@@ -2,6 +2,35 @@ import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { validateCreateTicket } from "@/lib/validation/ticket";
 import { createTicket } from "@/lib/tickets/create-ticket";
+import { getTickets } from "@/lib/tickets/get-tickets";
+
+
+export async function GET() {
+  const supabase = await createSupabaseServerClient();
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return NextResponse.json(
+      { error: "Authentication required." },
+      { status: 401 }
+    );
+  }
+
+  const { tickets, error } = await getTickets(supabase);
+
+  if (error || !tickets) {
+    return NextResponse.json(
+      { error: "Tickets could not be loaded." },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json({ tickets });
+}
 
 export async function POST(request: Request) {
   const supabase = await createSupabaseServerClient();

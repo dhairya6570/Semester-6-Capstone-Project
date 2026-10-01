@@ -1,7 +1,7 @@
 {
   "info": {
-    "name": "IT Asset Support Ticket Management - Authentication and User Management",
-    "description": "Automated Week 2 and Week 3 authentication and user management API tests.",
+    "name": "IT Asset & Support Ticket Management - API Tests",
+    "description": "Automated Postman API tests for the IT Asset & Support Ticket Management System. Current coverage includes Week 2 authentication (API-01 to API-03), Week 3 user management and profile features (API-04 to API-07), and Week 4 support ticket creation (API-08).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [

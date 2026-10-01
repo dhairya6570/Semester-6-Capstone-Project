@@ -96,27 +96,50 @@ export default function TicketDetailPage() {
           <div className="mt-8 rounded border p-6">
             <dl className="grid gap-6 sm:grid-cols-2">
               <div>
-                <dt className="font-semibold">Status</dt>
-                <dd className="mt-1">{ticket.status}</dd>
+                <dt className="font-semibold">
+                  Status
+                </dt>
+                <dd className="mt-1">
+                  {ticket.status}
+                </dd>
               </div>
 
               <div>
-                <dt className="font-semibold">Priority</dt>
+                <dt className="font-semibold">
+                  Priority
+                </dt>
                 <dd className="mt-1">
                   {ticket.priority ?? "Not set"}
                 </dd>
               </div>
 
               <div>
-                <dt className="font-semibold">Category</dt>
-                <dd className="mt-1">{ticket.category}</dd>
+                <dt className="font-semibold">
+                  Category
+                </dt>
+                <dd className="mt-1">
+                  {ticket.category}
+                </dd>
               </div>
 
               <div>
-                <dt className="font-semibold">Created</dt>
+                <dt className="font-semibold">
+                  Created
+                </dt>
                 <dd className="mt-1">
                   {new Date(
                     ticket.created_at
+                  ).toLocaleString()}
+                </dd>
+              </div>
+
+              <div>
+                <dt className="font-semibold">
+                  Last Updated
+                </dt>
+                <dd className="mt-1">
+                  {new Date(
+                    ticket.updated_at
                   ).toLocaleString()}
                 </dd>
               </div>

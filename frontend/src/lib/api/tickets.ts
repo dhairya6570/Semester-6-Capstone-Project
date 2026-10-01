@@ -27,6 +27,7 @@ export interface Ticket {
   priority: TicketPriority | null;
   status: TicketStatus;
   created_at: string;
+  updated_at: string;
 }
 
 export interface CreateTicketInput {

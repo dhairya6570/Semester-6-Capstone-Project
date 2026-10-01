@@ -7,7 +7,7 @@ export async function getTicket(
   const { data: ticket, error } = await supabase
     .from("tickets")
     .select(
-      "id, user_id, title, description, category, priority, status, created_at"
+      "id, user_id, title, description, category, priority, status, created_at, updated_at"
     )
     .eq("id", ticketId)
     .maybeSingle();

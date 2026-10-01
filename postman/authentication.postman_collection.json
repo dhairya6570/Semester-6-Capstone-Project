@@ -1,7 +1,7 @@
 {
   "info": {
-    "name": "IT Asset Support Ticket Management - Authentication and User Management",
-    "description": "Automated Week 2 and Week 3 authentication and user management API tests.",
+    "name": "IT Asset & Support Ticket Management - API Tests",
+    "description": "Automated Postman API tests for the IT Asset & Support Ticket Management System. Current coverage includes Week 2 authentication (API-01 to API-03), Week 3 user management and profile features (API-04 to API-07), and Week 4 support ticket creation (API-08).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -417,6 +417,47 @@
           "host": ["localhost"],
           "port": "3001",
           "path": ["api", "profile", "password"]
+        }
+      }
+    },
+    {
+      "name": "API-08 - Create Support Ticket",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"API-08: returns HTTP 201\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "pm.test(\"API-08: creates ticket with Open status\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.ticket.status).to.eql(\"Open\");",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Postman API-08 Test Ticket\",\n  \"description\": \"Support ticket created by the automated API-08 test.\",\n  \"category\": \"Hardware Issue\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3001/api/tickets",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3001",
+          "path": ["api", "tickets"]
         }
       }
     }

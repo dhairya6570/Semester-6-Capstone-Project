@@ -499,6 +499,53 @@
           "path": ["api", "auth", "login"]
         }
       }
+    },
+    {
+      "name": "API-09 - Update Ticket Status to Resolved",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"API-09: returns HTTP 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"API-09: updates ticket status to Resolved\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.ticket.status).to.eql(\"Resolved\");",
+              "});",
+              "",
+              "pm.test(\"API-09: records status change timestamp\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.ticket.status_changed_at).to.exist;",
+              "    pm.expect(json.ticket.status_changed_at).to.not.be.empty;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"Resolved\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3001/api/tickets/{{ticketId}}",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3001",
+          "path": ["api", "tickets", "{{ticketId}}"]
+        }
+      }
     }
   ]
 }

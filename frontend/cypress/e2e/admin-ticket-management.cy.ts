@@ -141,4 +141,109 @@ describe("Administrator Ticket Management", () => {
         cy.get("#ticket-status").should("have.value", "Resolved");
       });
   });
+
+  it("UI-07 - internal note is visible to administrator but hidden from employee", () => {
+    const ticketTitle = `Cypress UI-07 Note Ticket ${Date.now()}`;
+    const internalNote = `Cypress UI-07 Internal Note ${Date.now()}`;
+
+    // Log in as an employee.
+    cy.visit("/login");
+
+    cy.get("#email").type("employee@test.com");
+
+    cy.env(["employeePassword"]).then(({ employeePassword }) => {
+      cy.get("#password").type(employeePassword, { log: false });
+    });
+
+    cy.contains("button", "Sign In").click();
+
+    cy.url().should("include", "/dashboard");
+
+    // Create a new employee ticket for the internal note test.
+    cy.visit("/tickets/new");
+
+    cy.get("#title").type(ticketTitle);
+
+    cy.get("#description").type(
+      "Employee support ticket created for the Cypress UI-07 internal note test."
+    );
+
+    cy.get("#category").select("Other");
+    cy.get("#priority").select("Low");
+
+    cy.contains("button", "Create Ticket").click();
+
+    cy.url()
+      .should("match", /\/tickets\/\d+$/)
+      .then((url) => {
+        const ticketId = url.split("/").pop();
+
+        expect(ticketId).to.match(/^\d+$/);
+
+        // Log out of the employee account.
+        cy.visit("/login");
+
+        cy.contains("button", "Log Out").click();
+
+        cy.contains("Logout successful.").should("be.visible");
+
+        // Log in as an administrator.
+        cy.get("#email").clear().type("admin@test.com");
+
+        cy.env(["adminPassword"]).then(({ adminPassword }) => {
+          cy.get("#password").clear().type(adminPassword, { log: false });
+        });
+
+        cy.contains("button", "Sign In").click();
+
+        cy.url().should("include", "/admin");
+
+        // Open the employee ticket as the administrator.
+        cy.visit(`/admin/tickets/${ticketId}`);
+
+        cy.contains("h1", ticketTitle).should("be.visible");
+        cy.contains("h2", "Internal Notes").should("be.visible");
+
+        // Add an administrator-only internal note.
+        cy.get("#internal-note").type(internalNote);
+
+        cy.contains("button", "Add Note").click();
+
+        cy.contains("Internal note added successfully.").should(
+          "be.visible"
+        );
+
+        // Verify the administrator can see the saved note.
+        cy.contains(internalNote).should("be.visible");
+
+        // Log out of the administrator account.
+        cy.visit("/login");
+
+        cy.contains("button", "Log Out").click();
+
+        cy.contains("Logout successful.").should("be.visible");
+
+        // Log back in as the employee who owns the ticket.
+        cy.get("#email").clear().type("employee@test.com");
+
+        cy.env(["employeePassword"]).then(({ employeePassword }) => {
+          cy.get("#password")
+            .clear()
+            .type(employeePassword, { log: false });
+        });
+
+        cy.contains("button", "Sign In").click();
+
+        cy.url().should("include", "/dashboard");
+
+        // Open the same ticket as the employee.
+        cy.visit(`/tickets/${ticketId}`);
+
+        cy.contains("h1", ticketTitle).should("be.visible");
+
+        // Internal administrator notes must not be visible to employees.
+        cy.contains(internalNote).should("not.exist");
+        cy.contains("Internal Notes").should("not.exist");
+      });
+  });
 });

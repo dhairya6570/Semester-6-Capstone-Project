@@ -183,3 +183,23 @@ export async function addTicketNote(
 
   return data.note;
 }
+
+export async function deleteTicket(
+  id: number
+): Promise<void> {
+  const response = await fetch(
+    `${API_URL}/api/tickets/${id}`,
+    {
+      method: "DELETE",
+      credentials: "include",
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.error || "Unable to delete ticket."
+    );
+  }
+}

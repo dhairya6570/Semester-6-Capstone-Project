@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { getSession } from "@/lib/api/auth";
 import {
   addTicketNote,
+  deleteTicket,
   getTicket,
   getTicketNotes,
   updateTicketStatus,
@@ -26,6 +27,7 @@ export default function AdminTicketDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isAddingNote, setIsAddingNote] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -133,6 +135,36 @@ export default function AdminTicketDetailPage() {
       );
     } finally {
       setIsAddingNote(false);
+    }
+  }
+
+  async function handleDeleteTicket() {
+    if (!ticket) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Are you sure you want to delete Ticket #${ticket.id}? This action cannot be undone.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setError("");
+    setSuccessMessage("");
+    setIsDeleting(true);
+
+    try {
+      await deleteTicket(ticket.id);
+      router.push("/admin/tickets");
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Unable to delete ticket."
+      );
+      setIsDeleting(false);
     }
   }
 
@@ -257,7 +289,7 @@ export default function AdminTicketDetailPage() {
                         event.target.value as TicketStatus
                       )
                     }
-                    disabled={isSaving}
+                    disabled={isSaving || isDeleting}
                     className="mt-1 rounded border px-3 py-2"
                   >
                     <option value="Open">Open</option>
@@ -278,6 +310,7 @@ export default function AdminTicketDetailPage() {
                   onClick={handleStatusUpdate}
                   disabled={
                     isSaving ||
+                    isDeleting ||
                     selectedStatus === ticket.status
                   }
                   className="rounded bg-blue-600 px-4 py-2 text-white disabled:cursor-not-allowed disabled:opacity-50"
@@ -348,7 +381,7 @@ export default function AdminTicketDetailPage() {
                     setNoteText(event.target.value)
                   }
                   rows={4}
-                  disabled={isAddingNote}
+                  disabled={isAddingNote || isDeleting}
                   className="mt-2 w-full rounded border px-3 py-2"
                   placeholder="Enter an internal note..."
                 />
@@ -358,6 +391,7 @@ export default function AdminTicketDetailPage() {
                   onClick={handleAddNote}
                   disabled={
                     isAddingNote ||
+                    isDeleting ||
                     noteText.trim().length === 0
                   }
                   className="mt-3 rounded bg-blue-600 px-4 py-2 text-white disabled:cursor-not-allowed disabled:opacity-50"
@@ -367,6 +401,28 @@ export default function AdminTicketDetailPage() {
                     : "Add Note"}
                 </button>
               </div>
+            </div>
+
+            <div className="mt-8 border-t pt-6">
+              <h2 className="text-lg font-semibold">
+                Delete Ticket
+              </h2>
+
+              <p className="mt-1 text-sm text-gray-600">
+                Permanently delete this support ticket.
+                This action cannot be undone.
+              </p>
+
+              <button
+                type="button"
+                onClick={handleDeleteTicket}
+                disabled={isDeleting}
+                className="mt-4 rounded bg-red-600 px-4 py-2 text-white disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isDeleting
+                  ? "Deleting..."
+                  : "Delete Ticket"}
+              </button>
             </div>
           </div>
         </>

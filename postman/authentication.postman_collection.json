@@ -434,7 +434,10 @@
               "pm.test(\"API-08: creates ticket with Open status\", function () {",
               "    const json = pm.response.json();",
               "    pm.expect(json.ticket.status).to.eql(\"Open\");",
-              "});"
+              "});",
+              "",
+              "const json = pm.response.json();",
+              "pm.collectionVariables.set(\"ticketId\", json.ticket.id);"
             ],
             "type": "text/javascript"
           }
@@ -458,6 +461,42 @@
           "host": ["localhost"],
           "port": "3001",
           "path": ["api", "tickets"]
+        }
+      }
+    },
+    {
+      "name": "Setup - Administrator Login for Ticket Management",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Administrator login for ticket management succeeds\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@test.com\",\n  \"password\": \"Test@123\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3001/api/auth/login",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3001",
+          "path": ["api", "auth", "login"]
         }
       }
     }

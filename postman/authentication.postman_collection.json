@@ -546,6 +546,117 @@
           "path": ["api", "tickets", "{{ticketId}}"]
         }
       }
+    },
+    {
+      "name": "API-10 - Add Internal Ticket Note",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"API-10: returns HTTP 201\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "pm.test(\"API-10: saves internal ticket note\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.note).to.have.property(\"id\");",
+              "    pm.expect(json.note.ticket_id).to.eql(Number(pm.collectionVariables.get(\"ticketId\")));",
+              "    pm.expect(json.note.note_text).to.eql(\"Postman API-10 internal administrator note.\");",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"noteText\": \"Postman API-10 internal administrator note.\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3001/api/tickets/{{ticketId}}/notes",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3001",
+          "path": ["api", "tickets", "{{ticketId}}", "notes"]
+        }
+      }
+    },
+    {
+      "name": "Setup - Employee Login for Internal Note Verification",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Employee login for internal note verification succeeds\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"employee@test.com\",\n  \"password\": \"Test@1234\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3001/api/auth/login",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3001",
+          "path": ["api", "auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "API-10 - Internal Note Hidden from Employee",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"API-10: employee cannot access internal notes\", function () {",
+              "    pm.response.to.have.status(403);",
+              "});",
+              "",
+              "pm.test(\"API-10: returns administrator access required error\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.error).to.eql(\"Administrator access required.\");",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3001/api/tickets/{{ticketId}}/notes",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3001",
+          "path": ["api", "tickets", "{{ticketId}}", "notes"]
+        }
+      }
     }
   ]
 }

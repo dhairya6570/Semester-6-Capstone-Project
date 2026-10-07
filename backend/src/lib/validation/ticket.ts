@@ -147,3 +147,34 @@ export function validateTicketStatus(
     status: status as TicketStatus,
   };
 }
+
+export interface TicketNoteValidationResult {
+  valid: boolean;
+  error?: string;
+  noteText?: string;
+}
+
+export function validateTicketNote(
+  noteText: unknown
+): TicketNoteValidationResult {
+  if (typeof noteText !== "string") {
+    return {
+      valid: false,
+      error: "Note text is required.",
+    };
+  }
+
+  const trimmedNoteText = noteText.trim();
+
+  if (!trimmedNoteText) {
+    return {
+      valid: false,
+      error: "Note text is required.",
+    };
+  }
+
+  return {
+    valid: true,
+    noteText: trimmedNoteText,
+  };
+}

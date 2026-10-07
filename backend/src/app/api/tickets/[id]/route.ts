@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getTicket } from "@/lib/tickets/get-ticket";
 import { updateTicketStatus } from "@/lib/tickets/update-ticket-status";
+import { deleteTicket } from "@/lib/tickets/delete-ticket";
 import { validateTicketStatus } from "@/lib/validation/ticket";
 import { isAdministrator } from "@/lib/auth/roles";
 
@@ -168,5 +169,77 @@ export async function PATCH(
   return NextResponse.json({
     message: "Ticket status updated successfully.",
     ticket,
+  });
+}
+
+export async function DELETE(
+  request: Request,
+  context: RouteContext
+) {
+  const { id } = await context.params;
+  const ticketId = Number(id);
+
+  if (
+    !Number.isInteger(ticketId) ||
+    ticketId <= 0
+  ) {
+    return NextResponse.json(
+      { error: "Invalid ticket ID." },
+      { status: 400 }
+    );
+  }
+
+  const supabase = await createSupabaseServerClient();
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return NextResponse.json(
+      { error: "Authentication required." },
+      { status: 401 }
+    );
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (
+    profileError ||
+    !profile ||
+    !isAdministrator(profile.role)
+  ) {
+    return NextResponse.json(
+      { error: "Administrator access required." },
+      { status: 403 }
+    );
+  }
+
+  const { ticket, error } = await deleteTicket(
+    supabase,
+    ticketId
+  );
+
+  if (error) {
+    return NextResponse.json(
+      { error: "Ticket could not be deleted." },
+      { status: 500 }
+    );
+  }
+
+  if (!ticket) {
+    return NextResponse.json(
+      { error: "Ticket not found." },
+      { status: 404 }
+    );
+  }
+
+  return NextResponse.json({
+    message: "Ticket deleted successfully.",
   });
 }

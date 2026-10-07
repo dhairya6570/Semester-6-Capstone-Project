@@ -6,7 +6,9 @@ import { useParams, useRouter } from "next/navigation";
 import { getSession } from "@/lib/api/auth";
 import {
   getTicket,
+  updateTicketStatus,
   type Ticket,
+  type TicketStatus,
 } from "@/lib/api/tickets";
 
 export default function AdminTicketDetailPage() {
@@ -14,8 +16,12 @@ export default function AdminTicketDetailPage() {
   const params = useParams();
 
   const [ticket, setTicket] = useState<Ticket | null>(null);
+  const [selectedStatus, setSelectedStatus] =
+    useState<TicketStatus>("Open");
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
     async function loadTicket() {
@@ -40,7 +46,9 @@ export default function AdminTicketDetailPage() {
         }
 
         const ticketData = await getTicket(id);
+
         setTicket(ticketData);
+        setSelectedStatus(ticketData.status);
       } catch (err) {
         setError(
           err instanceof Error
@@ -54,6 +62,37 @@ export default function AdminTicketDetailPage() {
 
     loadTicket();
   }, [params.id, router]);
+
+  async function handleStatusUpdate() {
+    if (!ticket) {
+      return;
+    }
+
+    setError("");
+    setSuccessMessage("");
+    setIsSaving(true);
+
+    try {
+      const updatedTicket = await updateTicketStatus(
+        ticket.id,
+        selectedStatus
+      );
+
+      setTicket(updatedTicket);
+      setSelectedStatus(updatedTicket.status);
+      setSuccessMessage(
+        "Ticket status updated successfully."
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Unable to update ticket status."
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  }
 
   if (isLoading) {
     return (
@@ -81,7 +120,16 @@ export default function AdminTicketDetailPage() {
         </p>
       )}
 
-      {!error && ticket && (
+      {successMessage && (
+        <p
+          role="status"
+          className="mt-6 rounded border border-green-300 bg-green-50 p-4 text-green-700"
+        >
+          {successMessage}
+        </p>
+      )}
+
+      {ticket && (
         <>
           <div className="mt-6">
             <p className="text-sm text-gray-500">
@@ -144,6 +192,60 @@ export default function AdminTicketDetailPage() {
                 </dd>
               </div>
             </dl>
+
+            <div className="mt-8 border-t pt-6">
+              <h2 className="text-lg font-semibold">
+                Update Status
+              </h2>
+
+              <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end">
+                <div>
+                  <label
+                    htmlFor="ticket-status"
+                    className="block text-sm font-medium"
+                  >
+                    Ticket status
+                  </label>
+
+                  <select
+                    id="ticket-status"
+                    value={selectedStatus}
+                    onChange={(event) =>
+                      setSelectedStatus(
+                        event.target.value as TicketStatus
+                      )
+                    }
+                    disabled={isSaving}
+                    className="mt-1 rounded border px-3 py-2"
+                  >
+                    <option value="Open">Open</option>
+                    <option value="In Progress">
+                      In Progress
+                    </option>
+                    <option value="Resolved">
+                      Resolved
+                    </option>
+                    <option value="Closed">
+                      Closed
+                    </option>
+                  </select>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleStatusUpdate}
+                  disabled={
+                    isSaving ||
+                    selectedStatus === ticket.status
+                  }
+                  className="rounded bg-blue-600 px-4 py-2 text-white disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isSaving
+                    ? "Saving..."
+                    : "Save Status"}
+                </button>
+              </div>
+            </div>
 
             <div className="mt-8 border-t pt-6">
               <h2 className="text-lg font-semibold">

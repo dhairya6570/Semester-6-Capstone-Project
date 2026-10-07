@@ -28,6 +28,7 @@ export interface Ticket {
   status: TicketStatus;
   created_at: string;
   updated_at: string;
+  status_changed_at?: string;
 }
 
 export interface CreateTicketInput {
@@ -93,6 +94,33 @@ export async function createTicket(
   if (!response.ok) {
     throw new Error(
       data.error || "Unable to create ticket."
+    );
+  }
+
+  return data.ticket;
+}
+
+export async function updateTicketStatus(
+  id: number,
+  status: TicketStatus
+): Promise<Ticket> {
+  const response = await fetch(
+    `${API_URL}/api/tickets/${id}`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({ status }),
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.error || "Unable to update ticket status."
     );
   }
 

@@ -5,9 +5,12 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { getSession } from "@/lib/api/auth";
 import {
+  addTicketNote,
   getTicket,
+  getTicketNotes,
   updateTicketStatus,
   type Ticket,
+  type TicketNote,
   type TicketStatus,
 } from "@/lib/api/tickets";
 
@@ -16,10 +19,13 @@ export default function AdminTicketDetailPage() {
   const params = useParams();
 
   const [ticket, setTicket] = useState<Ticket | null>(null);
+  const [notes, setNotes] = useState<TicketNote[]>([]);
   const [selectedStatus, setSelectedStatus] =
     useState<TicketStatus>("Open");
+  const [noteText, setNoteText] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isAddingNote, setIsAddingNote] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -46,9 +52,11 @@ export default function AdminTicketDetailPage() {
         }
 
         const ticketData = await getTicket(id);
+        const notesData = await getTicketNotes(id);
 
         setTicket(ticketData);
         setSelectedStatus(ticketData.status);
+        setNotes(notesData);
       } catch (err) {
         setError(
           err instanceof Error
@@ -91,6 +99,40 @@ export default function AdminTicketDetailPage() {
       );
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  async function handleAddNote() {
+    if (!ticket) {
+      return;
+    }
+
+    setError("");
+    setSuccessMessage("");
+    setIsAddingNote(true);
+
+    try {
+      const newNote = await addTicketNote(
+        ticket.id,
+        noteText
+      );
+
+      setNotes((currentNotes) => [
+        ...currentNotes,
+        newNote,
+      ]);
+      setNoteText("");
+      setSuccessMessage(
+        "Internal note added successfully."
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Unable to add ticket note."
+      );
+    } finally {
+      setIsAddingNote(false);
     }
   }
 
@@ -255,6 +297,76 @@ export default function AdminTicketDetailPage() {
               <p className="mt-2 whitespace-pre-wrap">
                 {ticket.description}
               </p>
+            </div>
+
+            <div className="mt-8 border-t pt-6">
+              <h2 className="text-lg font-semibold">
+                Internal Notes
+              </h2>
+
+              <p className="mt-1 text-sm text-gray-600">
+                Internal notes are visible only to administrators.
+              </p>
+
+              {notes.length === 0 ? (
+                <p className="mt-4 text-gray-600">
+                  No internal notes have been added.
+                </p>
+              ) : (
+                <div className="mt-4 space-y-4">
+                  {notes.map((note) => (
+                    <div
+                      key={note.id}
+                      className="rounded border bg-gray-50 p-4"
+                    >
+                      <p className="whitespace-pre-wrap">
+                        {note.note_text}
+                      </p>
+
+                      <p className="mt-2 text-sm text-gray-500">
+                        {new Date(
+                          note.created_at
+                        ).toLocaleString()}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="mt-6">
+                <label
+                  htmlFor="internal-note"
+                  className="block font-medium"
+                >
+                  Add internal note
+                </label>
+
+                <textarea
+                  id="internal-note"
+                  value={noteText}
+                  onChange={(event) =>
+                    setNoteText(event.target.value)
+                  }
+                  rows={4}
+                  disabled={isAddingNote}
+                  className="mt-2 w-full rounded border px-3 py-2"
+                  placeholder="Enter an internal note..."
+                />
+
+                <button
+                  type="button"
+                  onClick={handleAddNote}
+                  disabled={
+                    isAddingNote ||
+                    noteText.trim().length === 0
+                  }
+                  className="mt-3 rounded bg-blue-600 px-4 py-2 text-white disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isAddingNote
+                    ? "Adding..."
+                    : "Add Note"}
+                </button>
+              </div>
             </div>
           </div>
         </>

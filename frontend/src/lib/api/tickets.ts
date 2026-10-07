@@ -31,6 +31,14 @@ export interface Ticket {
   status_changed_at?: string;
 }
 
+export interface TicketNote {
+  id: number;
+  ticket_id: number;
+  admin_user_id: string;
+  note_text: string;
+  created_at: string;
+}
+
 export interface CreateTicketInput {
   title: string;
   description: string;
@@ -125,4 +133,53 @@ export async function updateTicketStatus(
   }
 
   return data.ticket;
+}
+
+export async function getTicketNotes(
+  id: number
+): Promise<TicketNote[]> {
+  const response = await fetch(
+    `${API_URL}/api/tickets/${id}/notes`,
+    {
+      method: "GET",
+      credentials: "include",
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.error || "Unable to load ticket notes."
+    );
+  }
+
+  return data.notes;
+}
+
+export async function addTicketNote(
+  id: number,
+  noteText: string
+): Promise<TicketNote> {
+  const response = await fetch(
+    `${API_URL}/api/tickets/${id}/notes`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({ noteText }),
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.error || "Unable to add ticket note."
+    );
+  }
+
+  return data.note;
 }

@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+
+    // Ignore generated OWASP ZAP runtime files.
+    "security/zap-home/**",
+    "security/zap-scan-home/**",
   ]),
 ]);
 

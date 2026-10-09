@@ -1,0 +1,7 @@
+# OWASP ZAP runtime files
+zap-home/
+zap-scan-home/
+
+# Ignore generated reports except the reviewed Week 5 report
+reports/*
+!reports/week5-zap-security-report.html

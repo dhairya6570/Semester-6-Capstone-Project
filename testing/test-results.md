@@ -179,3 +179,119 @@ Milestone 4 Week 4 tests completed:
 ### Overall Result
 
 Week 4 automated testing: PASS
+
+
+
+## Week 5 - Administrator Ticket Management
+
+### Jest Unit Tests
+
+Command:
+
+`cd backend && npm test`
+
+Results:
+
+- Test Suites: 6 passed, 6 total
+- Tests: 18 passed, 18 total
+- Failures: 0
+
+Regression testing:
+
+- All previous Week 2, Week 3, and Week 4 Jest tests continue to pass.
+- Ticket note validation tests are included in the current test suite.
+
+### Postman API Tests
+
+Command:
+
+`postman collection run postman/authentication.postman_collection.json`
+
+Results:
+
+- Requests: 19 executed, 0 failed
+- Assertions: 36 executed, 0 failed
+
+Milestone 4 Week 5 tests completed:
+
+- API-09 - Administrator updates ticket status to Resolved (HTTP 200) and verifies status timestamp: PASS
+- API-10 - Administrator adds an internal ticket note (HTTP 201), inaccessible to employees: PASS
+- API-11 - Administrator deletes a ticket (HTTP 200) and verifies removal: PASS
+
+Regression testing:
+
+- Previous API tests continue to pass.
+
+### Cypress End-to-End Tests
+
+Command:
+
+`npx cypress run --spec "cypress/e2e/admin-ticket-management.cy.ts" --env employeePassword="Test@1234",adminPassword="Test@123"`
+
+Results:
+
+- Specs: 1 passed, 1 total
+- Tests: 3 passed, 3 total
+- Failures: 0
+- Duration: 15 seconds
+
+Milestone 4 Week 5 tests completed:
+
+- UI-05 - Administrator views tickets submitted by employees: PASS
+- UI-06 - Administrator updates ticket status to Resolved: PASS
+- UI-07 - Internal ticket notes are visible to administrators but inaccessible to employees: PASS
+
+Testing observation:
+
+- The initial regression run failed all three tests because the Cypress password environment variables were missing.
+- After supplying the correct test credentials, all three tests passed.
+- No application code changes were required to resolve the test configuration issue.
+
+### OWASP ZAP Security Testing
+
+Tool: OWASP ZAP 2.17.0
+
+Target:
+
+`POST http://localhost:3001/api/tickets/28/notes`
+
+Results:
+
+- Active scan: Finished (100%)
+- Total HTTP requests: 32
+- POST requests containing noteText: 31
+- Successful HTTP 201 responses: 31
+- Security alerts: 0
+
+Milestone 4 security tests:
+
+- SEC-01 - SQL Injection: PASS within the tested endpoint and scan configuration.
+- SEC-02 - Cross-Site Scripting (XSS): PASS within the tested endpoint and scan configuration.
+
+Security testing limitations:
+
+- This was a targeted initial security scan, not a complete penetration test.
+- The persistent XSS rule completed without sending requests, so comprehensive stored-XSS coverage was not established.
+- Zero ZAP alerts does not guarantee the absence of vulnerabilities.
+
+Evidence:
+
+- `backend/security/README.md`
+- `backend/security/reports/week5-zap-security-report.html`
+
+Cleanup:
+
+- Disposable security test ticket #28 deleted and HTTP 404 verified.
+- Temporary administrator session logged out successfully.
+- Temporary authentication cookie file removed.
+
+### Code Quality Checks
+
+- Backend ESLint: PASS
+- Frontend ESLint: PASS
+- Backend Jest regression: PASS
+- Cypress Week 5 regression: PASS
+
+### Overall Result
+
+Week 5 automated testing: PASS within the documented test scope.

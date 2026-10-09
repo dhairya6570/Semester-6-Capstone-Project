@@ -28,6 +28,15 @@ export interface Ticket {
   status: TicketStatus;
   created_at: string;
   updated_at: string;
+  status_changed_at?: string;
+}
+
+export interface TicketNote {
+  id: number;
+  ticket_id: number;
+  admin_user_id: string;
+  note_text: string;
+  created_at: string;
 }
 
 export interface CreateTicketInput {
@@ -97,4 +106,100 @@ export async function createTicket(
   }
 
   return data.ticket;
+}
+
+export async function updateTicketStatus(
+  id: number,
+  status: TicketStatus
+): Promise<Ticket> {
+  const response = await fetch(
+    `${API_URL}/api/tickets/${id}`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({ status }),
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.error || "Unable to update ticket status."
+    );
+  }
+
+  return data.ticket;
+}
+
+export async function getTicketNotes(
+  id: number
+): Promise<TicketNote[]> {
+  const response = await fetch(
+    `${API_URL}/api/tickets/${id}/notes`,
+    {
+      method: "GET",
+      credentials: "include",
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.error || "Unable to load ticket notes."
+    );
+  }
+
+  return data.notes;
+}
+
+export async function addTicketNote(
+  id: number,
+  noteText: string
+): Promise<TicketNote> {
+  const response = await fetch(
+    `${API_URL}/api/tickets/${id}/notes`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({ noteText }),
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.error || "Unable to add ticket note."
+    );
+  }
+
+  return data.note;
+}
+
+export async function deleteTicket(
+  id: number
+): Promise<void> {
+  const response = await fetch(
+    `${API_URL}/api/tickets/${id}`,
+    {
+      method: "DELETE",
+      credentials: "include",
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.error || "Unable to delete ticket."
+    );
+  }
 }

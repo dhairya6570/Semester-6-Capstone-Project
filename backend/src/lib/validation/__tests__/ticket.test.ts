@@ -1,5 +1,5 @@
 import { describe, expect, test } from "@jest/globals";
-import { validateCreateTicket } from "../ticket";
+import { validateCreateTicket, validateTicketStatus, validateTicketNote, } from "../ticket";
 
 describe("Ticket validation", () => {
   test("UT-04: accepts a ticket title at exactly 100 characters", () => {
@@ -52,5 +52,37 @@ describe("Ticket validation", () => {
     );
 
     expect(result.valid).toBe(false);
+  });
+
+  test("accepts valid ticket statuses", () => {
+    expect(validateTicketStatus("Open").valid).toBe(true);
+    expect(validateTicketStatus("In Progress").valid).toBe(true);
+    expect(validateTicketStatus("Resolved").valid).toBe(true);
+    expect(validateTicketStatus("Closed").valid).toBe(true);
+  });
+
+  test("rejects an invalid ticket status", () => {
+    const result = validateTicketStatus("Pending");
+
+    expect(result.valid).toBe(false);
+    expect(result.error).toBe("Invalid ticket status.");
+  });
+
+  test("accepts a valid internal ticket note", () => {
+    const result = validateTicketNote(
+      "Restarted the printer and updated the driver."
+    );
+
+    expect(result.valid).toBe(true);
+    expect(result.noteText).toBe(
+      "Restarted the printer and updated the driver."
+    );
+  });
+
+  test("rejects an empty internal ticket note", () => {
+    const result = validateTicketNote("   ");
+
+    expect(result.valid).toBe(false);
+    expect(result.error).toBe("Note text is required.");
   });
 });

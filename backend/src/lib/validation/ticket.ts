@@ -12,11 +12,21 @@ export const TICKET_PRIORITIES = [
   "High",
 ] as const;
 
+export const TICKET_STATUSES = [
+  "Open",
+  "In Progress",
+  "Resolved",
+  "Closed",
+] as const;
+
 export type TicketCategory =
   (typeof TICKET_CATEGORIES)[number];
 
 export type TicketPriority =
   (typeof TICKET_PRIORITIES)[number];
+
+export type TicketStatus =
+  (typeof TICKET_STATUSES)[number];
 
 export interface CreateTicketInput {
   title: string;
@@ -110,5 +120,61 @@ export function validateCreateTicket(
           ? null
           : (priority as TicketPriority),
     },
+  };
+}
+
+export interface UpdateTicketStatusValidationResult {
+  valid: boolean;
+  error?: string;
+  status?: TicketStatus;
+}
+
+export function validateTicketStatus(
+  status: unknown
+): UpdateTicketStatusValidationResult {
+  if (
+    typeof status !== "string" ||
+    !TICKET_STATUSES.includes(status as TicketStatus)
+  ) {
+    return {
+      valid: false,
+      error: "Invalid ticket status.",
+    };
+  }
+
+  return {
+    valid: true,
+    status: status as TicketStatus,
+  };
+}
+
+export interface TicketNoteValidationResult {
+  valid: boolean;
+  error?: string;
+  noteText?: string;
+}
+
+export function validateTicketNote(
+  noteText: unknown
+): TicketNoteValidationResult {
+  if (typeof noteText !== "string") {
+    return {
+      valid: false,
+      error: "Note text is required.",
+    };
+  }
+
+  const trimmedNoteText = noteText.trim();
+
+  if (!trimmedNoteText) {
+    return {
+      valid: false,
+      error: "Note text is required.",
+    };
+  }
+
+  return {
+    valid: true,
+    noteText: trimmedNoteText,
   };
 }

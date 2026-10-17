@@ -3,6 +3,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isAdministrator } from "@/lib/auth/roles";
 import { validateCreateAsset } from "@/lib/validation/asset";
 import { createAsset } from "@/lib/assets/create-asset";
+import { getAssets } from "@/lib/assets/get-assets";
 
 export async function POST(request: Request) {
   const supabase = await createSupabaseServerClient();
@@ -101,5 +102,52 @@ export async function POST(request: Request) {
   return NextResponse.json(
     { asset },
     { status: 201 }
+  );
+}
+
+export async function GET() {
+  const supabase = await createSupabaseServerClient();
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return NextResponse.json(
+      { error: "Authentication required." },
+      { status: 401 }
+    );
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (
+    profileError ||
+    !profile ||
+    !isAdministrator(profile.role)
+  ) {
+    return NextResponse.json(
+      { error: "Administrator access required." },
+      { status: 403 }
+    );
+  }
+
+  const { assets, error } = await getAssets(supabase);
+
+  if (error) {
+    return NextResponse.json(
+      { error: "Assets could not be retrieved." },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json(
+    { assets },
+    { status: 200 }
   );
 }

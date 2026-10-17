@@ -12,15 +12,34 @@ export async function getAsset(
     .eq("id", assetId)
     .maybeSingle();
 
-  if (error) {
+  if (error || !asset) {
     return {
       asset: null,
       error,
     };
   }
 
+  const { data: assignment, error: assignmentError } = await supabase
+    .from("asset_assignments")
+    .select("user_id, assigned_date")
+    .eq("asset_id", assetId)
+    .is("returned_date", null)
+    .maybeSingle();
+
+  if (assignmentError) {
+    return {
+      asset: null,
+      error: assignmentError,
+    };
+  }
+
   return {
-    asset,
+    asset: {
+      ...asset,
+      assignment_status: assignment ? "Assigned" : "Available",
+      assigned_user: assignment?.user_id ?? null,
+      assigned_date: assignment?.assigned_date ?? null,
+    },
     error: null,
   };
 }

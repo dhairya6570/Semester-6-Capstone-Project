@@ -757,6 +757,80 @@
           "path": ["api", "tickets", "{{ticketId}}"]
         }
       }
+    },
+    {
+      "name": "API-12 - Create Asset",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.collectionVariables.set('assetSerial', 'POSTMAN-ASSET-' + Date.now());"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('API-12: returns HTTP 201', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "const json = pm.response.json();",
+              "",
+              "pm.test('API-12: returns generated asset ID and code', function () {",
+              "    pm.expect(json.asset).to.exist;",
+              "    pm.expect(json.asset.id).to.exist;",
+              "    pm.expect(json.asset.asset_code).to.be.a('string');",
+              "});",
+              "",
+              "pm.test('API-12: returns correct asset information', function () {",
+              "    pm.expect(json.asset.asset_name).to.eql('Postman Test Laptop');",
+              "    pm.expect(json.asset.asset_type).to.eql('Laptop');",
+              "    pm.expect(json.asset.serial_number).to.eql(pm.collectionVariables.get('assetSerial'));",
+              "    pm.expect(json.asset.purchase_date).to.eql('2026-10-17');",
+              "});",
+              "",
+              "if (pm.response.code === 201 && json.asset && json.asset.id) {",
+              "    pm.collectionVariables.set('assetId', String(json.asset.id));",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"assetName\": \"Postman Test Laptop\",\n  \"assetType\": \"Laptop\",\n  \"serialNumber\": \"{{assetSerial}}\",\n  \"purchaseDate\": \"2026-10-17\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3001/api/assets",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "api",
+            "assets"
+          ]
+        }
+      }
     }
   ]
 }

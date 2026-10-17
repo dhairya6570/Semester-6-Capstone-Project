@@ -4,6 +4,7 @@ import { isAdministrator } from "@/lib/auth/roles";
 import { getAsset } from "@/lib/assets/get-asset";
 import { updateAsset } from "@/lib/assets/update-asset";
 import { validateUpdateAsset } from "@/lib/validation/asset";
+import { deleteAsset } from "@/lib/assets/delete-asset";
 
 interface RouteContext {
   params: Promise<{
@@ -176,4 +177,67 @@ export async function PATCH(
     message: "Asset updated successfully.",
     asset,
   });
+}
+
+export async function DELETE(
+  _request: Request,
+  context: RouteContext
+) {
+  const { id } = await context.params;
+  const assetId = Number(id);
+
+  if (
+    !/^[1-9]\d*$/.test(id) ||
+    !Number.isSafeInteger(assetId)
+  ) {
+    return NextResponse.json(
+      { error: "Invalid asset ID." },
+      { status: 400 }
+    );
+  }
+
+  const supabase = await createSupabaseServerClient();
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return NextResponse.json(
+      { error: "Authentication required." },
+      { status: 401 }
+    );
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (
+    profileError ||
+    !profile ||
+    !isAdministrator(profile.role)
+  ) {
+    return NextResponse.json(
+      { error: "Administrator access required." },
+      { status: 403 }
+    );
+  }
+
+  const result = await deleteAsset(supabase, assetId);
+
+  if (result.error) {
+    return NextResponse.json(
+      { error: result.error },
+      { status: result.status }
+    );
+  }
+
+  return NextResponse.json(
+    { message: "Asset deleted successfully." },
+    { status: 200 }
+  );
 }

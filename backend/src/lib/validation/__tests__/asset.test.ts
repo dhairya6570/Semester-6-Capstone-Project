@@ -1,6 +1,9 @@
 
-import { describe, expect, test } from "@jest/globals";
+import { describe, expect, jest, test } from "@jest/globals";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { validateCreateAsset, validateUpdateAsset } from "../asset";
+import { createAsset } from "@/lib/assets/create-asset";
+import { getAsset } from "@/lib/assets/get-asset";
 
 describe("Asset validation", () => {
   test("accepts valid asset information", () => {
@@ -334,5 +337,160 @@ describe("Update asset validation", () => {
     });
 
     expect(result.valid).toBe(false);
+  });
+});
+
+describe("Asset creation service", () => {
+  test("UT-12: application leaves asset ID generation to the database", async () => {
+    const single = jest.fn(async () => ({
+      data: {
+        id: 10,
+        asset_code: "AST-0010",
+        asset_name: "Dell Laptop",
+        asset_type: "Laptop",
+        serial_number: "TEST-UT12-001",
+        purchase_date: "2026-10-15",
+      },
+      error: null,
+    }));
+
+    const select = jest.fn(() => ({ single }));
+    const insert = jest.fn<(values: Record<string, unknown>) => { select: typeof select }>(
+        () => ({ select })
+    );
+    const from = jest.fn<(table: string) => { insert: typeof insert }>(
+        () => ({ insert })
+    );
+
+    const supabase = { from } as unknown as SupabaseClient;
+
+    const result = await createAsset(supabase, {
+      assetName: "Dell Laptop",
+      assetType: "Laptop",
+      serialNumber: "TEST-UT12-001",
+      purchaseDate: "2026-10-15",
+    });
+
+    expect(from).toHaveBeenCalledWith("assets");
+
+    expect(insert).toHaveBeenCalledWith({
+      asset_name: "Dell Laptop",
+      asset_type: "Laptop",
+      serial_number: "TEST-UT12-001",
+      purchase_date: "2026-10-15",
+    });
+
+    expect(result.asset?.id).toBe(10);
+    expect(result.asset?.asset_code).toBe("AST-0010");
+    expect(result.error).toBeNull();
+  });
+
+  test("UT-14: duplicate serial number returns a database error", async () => {
+    const duplicateError = {
+      code: "23505",
+      message: "duplicate key value violates unique constraint",
+      details: "Key (serial_number) already exists.",
+      hint: "",
+    };
+
+    const single = jest.fn(async () => ({
+      data: null,
+      error: duplicateError,
+    }));
+
+    const select = jest.fn(() => ({ single }));
+
+    const insert = jest.fn<
+      (values: Record<string, unknown>) => { select: typeof select }
+    >(() => ({ select }));
+
+    const from = jest.fn<
+      (table: string) => { insert: typeof insert }
+    >(() => ({ insert }));
+
+    const supabase = { from } as unknown as SupabaseClient;
+
+    const result = await createAsset(supabase, {
+      assetName: "Another Dell Laptop",
+      assetType: "Laptop",
+      serialNumber: "DUPLICATE-001",
+      purchaseDate: "2026-10-15",
+    });
+
+    expect(from).toHaveBeenCalledWith("assets");
+    expect(result.asset).toBeNull();
+    expect(result.error?.code).toBe("23505");
+  });
+});
+
+
+describe("Asset assignment status", () => {
+  test("UT-11: new asset without an assignment is Available", async () => {
+    const asset = {
+      id: 10,
+      asset_code: "AST-0010",
+      asset_name: "Dell Laptop",
+      asset_type: "Laptop",
+      serial_number: "TEST-UT11-001",
+      purchase_date: "2026-10-15",
+    };
+
+    const assetMaybeSingle = jest.fn(async () => ({
+      data: asset,
+      error: null,
+    }));
+
+    const assignmentMaybeSingle = jest.fn(async () => ({
+      data: null,
+      error: null,
+    }));
+
+    const assetEq = jest.fn(() => ({
+      maybeSingle: assetMaybeSingle,
+    }));
+
+    const assignmentIs = jest.fn<
+      (column: string, value: null) => {
+        maybeSingle: typeof assignmentMaybeSingle;
+      }
+    >(() => ({
+      maybeSingle: assignmentMaybeSingle,
+    }));
+
+    const assignmentEq = jest.fn<
+      (column: string, value: number) => {
+        is: typeof assignmentIs;
+      }
+    >(() => ({
+      is: assignmentIs,
+    }));
+
+    const assetSelect = jest.fn(() => ({
+      eq: assetEq,
+    }));
+
+    const assignmentSelect = jest.fn(() => ({
+      eq: assignmentEq,
+    }));
+
+    const from = jest.fn((table: string) => {
+      if (table === "assets") {
+        return { select: assetSelect };
+      }
+
+      return { select: assignmentSelect };
+    });
+
+    const supabase = { from } as unknown as SupabaseClient;
+
+    const result = await getAsset(supabase, 10);
+
+    expect(result.error).toBeNull();
+    expect(result.asset?.assignment_status).toBe("Available");
+    expect(result.asset?.assigned_user).toBeNull();
+    expect(result.asset?.assigned_date).toBeNull();
+
+    expect(assignmentEq).toHaveBeenCalledWith("asset_id", 10);
+    expect(assignmentIs).toHaveBeenCalledWith("returned_date", null);
   });
 });

@@ -5,7 +5,11 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { getSession } from "@/lib/api/auth";
-import { getAsset, type Asset } from "@/lib/api/assets";
+import {
+  deleteAsset,
+  getAsset,
+  type Asset,
+} from "@/lib/api/assets";
 
 export default function AdminAssetDetailPage() {
   const router = useRouter();
@@ -13,6 +17,7 @@ export default function AdminAssetDetailPage() {
 
   const [asset, setAsset] = useState<Asset | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -32,7 +37,7 @@ export default function AdminAssetDetailPage() {
 
         const id = Number(params.id);
 
-        if (!Number.isInteger(id) || id <= 0) {
+        if (!Number.isSafeInteger(id) || id <= 0) {
           setError("Invalid asset ID.");
           return;
         }
@@ -52,6 +57,35 @@ export default function AdminAssetDetailPage() {
 
     loadAsset();
   }, [params.id, router]);
+
+  async function handleDeleteAsset() {
+    if (!asset || isDeleting) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Are you sure you want to delete asset ${asset.asset_code} (${asset.asset_name})? This action cannot be undone.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setError("");
+    setIsDeleting(true);
+
+    try {
+      await deleteAsset(asset.id);
+      router.push("/admin/assets");
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Unable to delete asset."
+      );
+      setIsDeleting(false);
+    }
+  }
 
   if (isLoading) {
     return (
@@ -94,7 +128,10 @@ export default function AdminAssetDetailPage() {
 
             <Link
               href={`/admin/assets/${asset.id}/edit`}
-              className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+              aria-disabled={isDeleting}
+              className={`rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 ${
+                isDeleting ? "pointer-events-none opacity-50" : ""
+              }`}
             >
               Edit Asset
             </Link>
@@ -107,60 +144,80 @@ export default function AdminAssetDetailPage() {
 
             <dl className="grid gap-6 sm:grid-cols-2">
               <div>
-                <dt className="font-semibold">Asset ID</dt>
+                <dt className="font-semibold">
+                  Asset ID
+                </dt>
                 <dd className="mt-1">{asset.id}</dd>
               </div>
 
               <div>
-                <dt className="font-semibold">Asset Code</dt>
+                <dt className="font-semibold">
+                  Asset Code
+                </dt>
                 <dd className="mt-1">{asset.asset_code}</dd>
               </div>
 
               <div>
-                <dt className="font-semibold">Asset Name</dt>
+                <dt className="font-semibold">
+                  Asset Name
+                </dt>
                 <dd className="mt-1">{asset.asset_name}</dd>
               </div>
 
               <div>
-                <dt className="font-semibold">Asset Type</dt>
+                <dt className="font-semibold">
+                  Asset Type
+                </dt>
                 <dd className="mt-1">{asset.asset_type}</dd>
               </div>
 
               <div>
-                <dt className="font-semibold">Serial Number</dt>
+                <dt className="font-semibold">
+                  Serial Number
+                </dt>
                 <dd className="mt-1">{asset.serial_number}</dd>
               </div>
 
               <div>
-                <dt className="font-semibold">Assignment Status</dt>
+                <dt className="font-semibold">
+                  Assignment Status
+                </dt>
                 <dd className="mt-1">
                   {asset.assignment_status ?? "Unknown"}
                 </dd>
               </div>
 
               <div>
-                <dt className="font-semibold">Purchase Date</dt>
+                <dt className="font-semibold">
+                  Purchase Date
+                </dt>
                 <dd className="mt-1">
                   {asset.purchase_date ?? "Not provided"}
                 </dd>
               </div>
 
               <div>
-                <dt className="font-semibold">Assigned User</dt>
+                <dt className="font-semibold">
+                  Assigned User
+                </dt>
                 <dd className="mt-1">
                   {asset.assigned_user ?? "Not assigned"}
                 </dd>
               </div>
 
               <div>
-                <dt className="font-semibold">Assigned Date</dt>
+                <dt className="font-semibold">
+                  Assigned Date
+                </dt>
                 <dd className="mt-1">
                   {asset.assigned_date ?? "Not assigned"}
                 </dd>
               </div>
 
               <div>
-                <dt className="font-semibold">Created</dt>
+                <dt className="font-semibold">
+                  Created
+                </dt>
                 <dd className="mt-1">
                   {new Date(asset.created_at).toLocaleString()}
                 </dd>
@@ -168,13 +225,40 @@ export default function AdminAssetDetailPage() {
 
               {asset.updated_at && (
                 <div>
-                  <dt className="font-semibold">Last Updated</dt>
+                  <dt className="font-semibold">
+                    Last Updated
+                  </dt>
                   <dd className="mt-1">
                     {new Date(asset.updated_at).toLocaleString()}
                   </dd>
                 </div>
               )}
             </dl>
+
+            <div className="mt-8 border-t pt-6">
+              <h2 className="text-lg font-semibold">
+                Delete Asset
+              </h2>
+
+              <p className="mt-2 text-sm text-gray-500">
+                Permanently delete this asset from the system.
+                This action cannot be undone.
+              </p>
+
+              <p className="mt-2 text-sm text-gray-500">
+                Assets with active or historical assignments
+                cannot be deleted.
+              </p>
+
+              <button
+                type="button"
+                onClick={handleDeleteAsset}
+                disabled={isDeleting}
+                className="mt-4 rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isDeleting ? "Deleting..." : "Delete Asset"}
+              </button>
+            </div>
           </div>
         </>
       )}

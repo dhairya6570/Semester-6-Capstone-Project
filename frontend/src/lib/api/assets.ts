@@ -118,3 +118,21 @@ export async function updateAsset(
 
   return data.asset;
 }
+
+export async function deleteAsset(id: number): Promise<void> {
+  const response = await fetch(
+    `${API_URL}/api/assets/${id}`,
+    {
+      method: "DELETE",
+      credentials: "include",
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.error || "Unable to delete asset."
+    );
+  }
+}

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -100,12 +101,24 @@ export default function AdminAssetsPage() {
           <table className="w-full text-left">
             <thead className="bg-gray-100">
               <tr>
-                <th scope="col" className="p-4">Asset Code</th>
-                <th scope="col" className="p-4">Name</th>
-                <th scope="col" className="p-4">Type</th>
-                <th scope="col" className="p-4">Serial Number</th>
-                <th scope="col" className="p-4">Status</th>
-                <th scope="col" className="p-4">Purchase Date</th>
+                <th scope="col" className="p-4">
+                  Asset Code
+                </th>
+                <th scope="col" className="p-4">
+                  Name
+                </th>
+                <th scope="col" className="p-4">
+                  Type
+                </th>
+                <th scope="col" className="p-4">
+                  Serial Number
+                </th>
+                <th scope="col" className="p-4">
+                  Status
+                </th>
+                <th scope="col" className="p-4">
+                  Purchase Date
+                </th>
               </tr>
             </thead>
 
@@ -117,7 +130,12 @@ export default function AdminAssetsPage() {
                   </td>
 
                   <td className="p-4">
-                    {asset.asset_name}
+                    <Link
+                      href={`/admin/assets/${asset.id}`}
+                      className="text-blue-600 hover:underline"
+                    >
+                      {asset.asset_name}
+                    </Link>
                   </td>
 
                   <td className="p-4">

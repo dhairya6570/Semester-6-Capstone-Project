@@ -1,3 +1,4 @@
+
 import { API_URL } from "@/lib/api/config";
 
 export type AssetAssignmentStatus = "Available" | "Assigned";
@@ -12,6 +13,8 @@ export interface Asset {
   created_at: string;
   updated_at?: string;
   assignment_status?: AssetAssignmentStatus;
+  assigned_user?: string | null;
+  assigned_date?: string | null;
 }
 
 export interface CreateAssetInput {
@@ -36,6 +39,28 @@ export async function getAssets(): Promise<Asset[]> {
   }
 
   return data.assets;
+}
+
+export async function getAsset(
+  id: number
+): Promise<Asset> {
+  const response = await fetch(
+    `${API_URL}/api/assets/${id}`,
+    {
+      method: "GET",
+      credentials: "include",
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.error || "Unable to load asset."
+    );
+  }
+
+  return data.asset;
 }
 
 export async function createAsset(

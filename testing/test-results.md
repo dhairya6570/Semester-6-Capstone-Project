@@ -295,3 +295,156 @@ Cleanup:
 ### Overall Result
 
 Week 5 automated testing: PASS within the documented test scope.
+
+
+
+
+
+## Week 7 - IT Asset Management
+
+### Jest Unit Tests
+
+Command:
+
+`cd backend`
+
+`npm test -- --runInBand`
+
+Results:
+
+- Test Suites: 7 passed, 7 total
+- Tests: 52 passed, 52 total
+- Failures: 0
+
+Milestone 4 Week 7 tests completed:
+
+- UT-11 - Newly created asset automatically receives Available status: PASS
+- UT-12 - Newly created asset receives a unique auto-generated asset ID: PASS
+- UT-14 - Duplicate asset serial number is rejected: PASS
+
+Additional testing:
+
+- Asset creation and update validation tests completed.
+- Asset creation service tests completed.
+- Invalid asset information is rejected by validation.
+- Asset serial numbers and generated asset identifiers cannot be modified through the update endpoint.
+
+Regression testing:
+
+- All previous Week 2 through Week 5 Jest tests continue to pass.
+
+### Postman API Tests
+
+Command:
+
+`postman collection run postman/authentication.postman_collection.json`
+
+Results:
+
+- Requests: 20 executed, 0 failed
+- Test Scripts: 20 executed, 0 failed
+- Prerequest Scripts: 2 executed, 0 failed
+- Assertions: 39 executed, 0 failed
+- Duration: 5.4 seconds
+
+Milestone 4 Week 7 tests completed:
+
+- API-12 - Administrator creates a new asset (HTTP 201): PASS
+- API-12 - Newly created asset receives a generated asset ID and asset code: PASS
+- API-12 - Created asset information matches the submitted data: PASS
+
+Regression testing:
+
+- All previous API-01 through API-11 tests continue to pass.
+
+Testing observation:
+
+- Postman displayed an authentication warning because the CLI was not logged in for cloud publishing.
+- All local API tests completed successfully with zero failures.
+- No Postman cloud login was required for local testing.
+
+### Cypress End-to-End Tests
+
+Command:
+
+`npx cypress run --browser chrome --env adminPassword="Test@123",employeePassword="Test@1234"`
+
+Results:
+
+- Specs: 3 passed, 3 total
+- Tests: 6 passed, 6 total
+- Failures: 0
+- Browser: Chrome 155 (headless)
+- Duration: approximately 20 seconds
+
+Milestone 4 Week 7 tests completed:
+
+- UI-08 - Administrator creates a new asset and sees it in the asset list: PASS
+- UI-08 - Newly created asset displays its generated asset code: PASS
+- UI-08 - Newly created asset displays Available assignment status: PASS
+
+Regression testing:
+
+- UI-03 - Employee submits a support ticket: PASS
+- UI-04 - Employee views support ticket details: PASS
+- UI-05 - Administrator views employee support tickets: PASS
+- UI-06 - Administrator updates ticket status: PASS
+- UI-07 - Administrator views internal notes while employee access is restricted: PASS
+
+### Manual Frontend and API Testing
+
+Asset creation:
+
+- Administrator successfully created assets using the frontend form: PASS
+- New assets appeared in the asset list: PASS
+- Automatically generated asset codes displayed correctly: PASS
+- Newly created assets displayed Available status: PASS
+
+Asset details:
+
+- Administrator opened asset details from the asset list: PASS
+- Asset information, assignment status, and timestamps displayed correctly: PASS
+
+Asset editing:
+
+- Existing asset information loaded into the edit form: PASS
+- Administrator successfully updated an asset type: PASS
+- Updated information appeared on the asset details page: PASS
+- Asset code and serial number remained unchanged: PASS
+
+Asset deletion:
+
+- Delete confirmation dialog appeared: PASS
+- Administrator successfully deleted a disposable test asset: PASS
+- Application redirected to the asset list after deletion: PASS
+- Deleted asset no longer appeared in the list: PASS
+- Opening the deleted asset URL displayed "Asset not found": PASS
+
+Backend API verification:
+
+- Asset creation returned HTTP 201: PASS
+- Asset listing and details returned HTTP 200: PASS
+- Duplicate serial number returned HTTP 409: PASS
+- Asset update returned HTTP 200: PASS
+- Asset deletion returned HTTP 200: PASS
+- Deleted asset lookup returned HTTP 404: PASS
+
+Testing limitations:
+
+- Asset editing and deletion were verified manually but do not yet have dedicated Cypress regression tests.
+- Canceling asset deletion has not yet been separately verified.
+- Assigned-asset deletion restrictions will receive further testing during Week 8 when asset assignments are implemented.
+
+### Code Quality Checks
+
+- Backend Jest regression: PASS
+- Frontend TypeScript (`npx tsc --noEmit`): PASS
+- Frontend ESLint: PASS
+- Postman API regression: PASS
+- Cypress frontend regression: PASS
+
+### Overall Result
+
+Week 7 automated testing: PASS within the documented test scope.
+
+Asset CRUD functionality has been implemented and verified through automated tests and manual testing. Asset assignment and unassignment functionality will be developed and tested separately during Week 8.

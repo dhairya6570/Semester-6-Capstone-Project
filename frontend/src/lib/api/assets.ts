@@ -24,6 +24,12 @@ export interface CreateAssetInput {
   purchaseDate: string | null;
 }
 
+export interface UpdateAssetInput {
+  assetName: string;
+  assetType: string;
+  purchaseDate: string | null;
+}
+
 export async function getAssets(): Promise<Asset[]> {
   const response = await fetch(`${API_URL}/api/assets`, {
     method: "GET",
@@ -80,6 +86,33 @@ export async function createAsset(
   if (!response.ok) {
     throw new Error(
       data.error || "Unable to create asset."
+    );
+  }
+
+  return data.asset;
+}
+
+export async function updateAsset(
+  id: number,
+  input: UpdateAssetInput
+): Promise<Asset> {
+  const response = await fetch(
+    `${API_URL}/api/assets/${id}`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify(input),
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.error || "Unable to update asset."
     );
   }
 

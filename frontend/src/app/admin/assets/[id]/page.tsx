@@ -81,14 +81,23 @@ export default function AdminAssetDetailPage() {
 
       {asset && (
         <>
-          <div className="mt-6">
-            <p className="text-sm text-gray-500">
-              Asset Code: {asset.asset_code}
-            </p>
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="text-sm text-gray-500">
+                Asset Code: {asset.asset_code}
+              </p>
 
-            <h1 className="mt-1 text-3xl font-bold">
-              {asset.asset_name}
-            </h1>
+              <h1 className="mt-1 text-3xl font-bold">
+                {asset.asset_name}
+              </h1>
+            </div>
+
+            <Link
+              href={`/admin/assets/${asset.id}/edit`}
+              className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+            >
+              Edit Asset
+            </Link>
           </div>
 
           <div className="mt-8 rounded border p-6">

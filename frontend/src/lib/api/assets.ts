@@ -136,3 +136,52 @@ export async function deleteAsset(id: number): Promise<void> {
     );
   }
 }
+
+export interface AssignAssetInput {
+  userId: string;
+}
+
+export async function assignAsset(
+  id: number,
+  input: AssignAssetInput
+): Promise<void> {
+  const response = await fetch(
+    `${API_URL}/api/assets/${id}/assign`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify(input),
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.error || "Unable to assign asset."
+    );
+  }
+}
+
+export async function unassignAsset(
+  id: number
+): Promise<void> {
+  const response = await fetch(
+    `${API_URL}/api/assets/${id}/unassign`,
+    {
+      method: "POST",
+      credentials: "include",
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.error || "Unable to unassign asset."
+    );
+  }
+}

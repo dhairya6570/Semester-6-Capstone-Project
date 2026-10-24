@@ -185,3 +185,26 @@ export async function unassignAsset(
     );
   }
 }
+
+export interface AssignedAsset extends Asset {
+  assignment_id: number;
+  assigned_date: string;
+  assignment_status: "Assigned";
+}
+
+export async function getMyAssets(): Promise<AssignedAsset[]> {
+  const response = await fetch(`${API_URL}/api/my/assets`, {
+    method: "GET",
+    credentials: "include",
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.error || "Unable to load your assigned assets."
+    );
+  }
+
+  return data.assets;
+}

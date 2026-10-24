@@ -1,10 +1,7 @@
+
 "use client";
 
-import {
-  FormEvent,
-  useEffect,
-  useState,
-} from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getSession } from "@/lib/api/auth";
@@ -13,6 +10,7 @@ import {
   type TicketCategory,
   type TicketPriority,
 } from "@/lib/api/tickets";
+import AppShell from "@/components/layout/AppShell";
 
 const categories: TicketCategory[] = [
   "Hardware Issue",
@@ -27,6 +25,12 @@ const priorities: TicketPriority[] = [
   "Medium",
   "High",
 ];
+
+const inputClass =
+  "mt-2 w-full rounded-xl border border-[#C8D6DC] bg-white px-4 py-3 text-[#101F2B] outline-none transition focus:border-[#087F70] focus:ring-2 focus:ring-[#087F70]/20";
+
+const labelClass =
+  "block text-sm font-semibold text-[#243B49]";
 
 export default function NewTicketPage() {
   const router = useRouter();
@@ -73,14 +77,36 @@ export default function NewTicketPage() {
     event: FormEvent<HTMLFormElement>
   ) {
     event.preventDefault();
-
     setError("");
+
+    if (!title.trim()) {
+      setError("Please enter a ticket title.");
+      return;
+    }
+
+    if (title.trim().length > 100) {
+      setError("Ticket title must not exceed 100 characters.");
+      return;
+    }
+
+    if (!description.trim()) {
+      setError("Please enter a ticket description.");
+      return;
+    }
+
+    if (description.trim().length > 1000) {
+      setError(
+        "Ticket description must not exceed 1000 characters."
+      );
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
       const ticket = await createTicket({
-        title,
-        description,
+        title: title.trim(),
+        description: description.trim(),
         category,
         priority: priority || null,
       });
@@ -99,168 +125,211 @@ export default function NewTicketPage() {
 
   if (isCheckingSession) {
     return (
-      <main className="p-8">
-        <p>Checking session...</p>
+      <main className="flex min-h-screen items-center justify-center bg-[#F4F7F8] px-5">
+        <p role="status" className="text-sm text-[#405462]">
+          Checking session...
+        </p>
       </main>
     );
   }
 
   return (
-    <main className="mx-auto max-w-3xl p-8">
-      <Link
-        href="/tickets"
-        className="text-blue-600 hover:underline"
-      >
-        ← Back to My Tickets
-      </Link>
+    <AppShell role="Employee">
+      <div className="mx-auto max-w-4xl space-y-8">
+        <header>
+          <Link
+            href="/tickets"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-[#087F70] hover:underline"
+          >
+            <span aria-hidden="true">←</span>
+            Back to My Tickets
+          </Link>
 
-      <div className="mt-6">
-        <h1 className="text-3xl font-bold">
-          Create Support Ticket
-        </h1>
+          <p className="mb-2 mt-7 text-sm font-semibold uppercase tracking-widest text-[#087F70]">
+            Employee Workspace
+          </p>
 
-        <p className="mt-2 text-gray-600">
-          Submit a new request to the IT support team.
-        </p>
+          <h1 className="text-3xl font-bold tracking-tight text-[#101F2B] sm:text-4xl">
+            Create Support Ticket
+          </h1>
+
+          <p className="mt-3 text-base text-[#526672]">
+            Describe your IT issue or request assistance
+            from the support team.
+          </p>
+        </header>
+
+        <section
+          aria-labelledby="ticket-form-heading"
+          className="overflow-hidden rounded-2xl border border-[#DCE6E9] bg-white shadow-sm"
+        >
+          <div className="border-b border-[#E1E9EC] px-6 py-6 sm:px-8">
+            <h2
+              id="ticket-form-heading"
+              className="text-xl font-bold text-[#101F2B]"
+            >
+              Ticket Information
+            </h2>
+
+            <p className="mt-2 text-sm text-[#526672]">
+              Complete the details below to submit your request.
+            </p>
+          </div>
+
+          <form
+            onSubmit={handleSubmit}
+            noValidate
+            className="space-y-7 px-6 py-7 sm:px-8"
+          >
+            <div>
+              <label htmlFor="title" className={labelClass}>
+                Ticket Title
+                <span className="ml-1 text-[#B4233B]">*</span>
+              </label>
+
+              <input
+                id="title"
+                type="text"
+                value={title}
+                onChange={(event) =>
+                  setTitle(event.target.value)
+                }
+                required
+                maxLength={100}
+                aria-describedby="title-help"
+                className={inputClass}
+                placeholder="Briefly describe the issue"
+              />
+
+              <p
+                id="title-help"
+                className="mt-2 text-xs text-[#526672]"
+              >
+                {title.length}/100 characters
+              </p>
+            </div>
+
+            <div>
+              <label
+                htmlFor="description"
+                className={labelClass}
+              >
+                Description
+                <span className="ml-1 text-[#B4233B]">*</span>
+              </label>
+
+              <textarea
+                id="description"
+                value={description}
+                onChange={(event) =>
+                  setDescription(event.target.value)
+                }
+                required
+                maxLength={1000}
+                rows={6}
+                aria-describedby="description-help"
+                className={inputClass}
+                placeholder="Explain the issue, when it started, and any relevant details"
+              />
+
+              <p
+                id="description-help"
+                className="mt-2 text-xs text-[#526672]"
+              >
+                {description.length}/1000 characters
+              </p>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-2">
+              <div>
+                <label
+                  htmlFor="category"
+                  className={labelClass}
+                >
+                  Category
+                  <span className="ml-1 text-[#B4233B]">*</span>
+                </label>
+
+                <select
+                  id="category"
+                  value={category}
+                  onChange={(event) =>
+                    setCategory(
+                      event.target.value as TicketCategory
+                    )
+                  }
+                  className={inputClass}
+                >
+                  {categories.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="priority"
+                  className={labelClass}
+                >
+                  Priority
+                  <span className="ml-2 text-xs font-normal text-[#526672]">
+                    Optional
+                  </span>
+                </label>
+
+                <select
+                  id="priority"
+                  value={priority}
+                  onChange={(event) =>
+                    setPriority(
+                      event.target.value as TicketPriority | ""
+                    )
+                  }
+                  className={inputClass}
+                >
+                  <option value="">No priority</option>
+
+                  {priorities.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {error && (
+              <p
+                role="alert"
+                className="rounded-xl border border-[#F1C9CF] bg-[#FFF1F2] px-4 py-3 text-sm text-[#B4233B]"
+              >
+                {error}
+              </p>
+            )}
+
+            <div className="flex flex-col-reverse gap-3 border-t border-[#E1E9EC] pt-6 sm:flex-row sm:justify-end">
+              <Link
+                href="/tickets"
+                className="inline-flex items-center justify-center rounded-xl border border-[#C8D6DC] bg-white px-6 py-3 text-sm font-semibold text-[#243B49] transition hover:bg-[#F4F7F8]"
+              >
+                Cancel
+              </Link>
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="inline-flex items-center justify-center rounded-xl bg-[#087F70] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#066759] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isSubmitting
+                  ? "Creating Ticket..."
+                  : "Create Ticket"}
+              </button>
+            </div>
+          </form>
+        </section>
       </div>
-
-      {error && (
-        <p
-          role="alert"
-          className="mt-6 rounded border border-red-300 bg-red-50 p-4 text-red-700"
-        >
-          {error}
-        </p>
-      )}
-
-      <form
-        onSubmit={handleSubmit}
-        className="mt-8 space-y-6"
-      >
-        <div>
-          <label
-            htmlFor="title"
-            className="block font-medium"
-          >
-            Title
-          </label>
-
-          <input
-            id="title"
-            type="text"
-            value={title}
-            onChange={(event) =>
-              setTitle(event.target.value)
-            }
-            required
-            maxLength={100}
-            className="mt-2 w-full rounded border px-3 py-2"
-          />
-
-          <p className="mt-1 text-sm text-gray-500">
-            {title.length}/100 characters
-          </p>
-        </div>
-
-        <div>
-          <label
-            htmlFor="description"
-            className="block font-medium"
-          >
-            Description
-          </label>
-
-          <textarea
-            id="description"
-            value={description}
-            onChange={(event) =>
-              setDescription(event.target.value)
-            }
-            required
-            maxLength={1000}
-            rows={6}
-            className="mt-2 w-full rounded border px-3 py-2"
-          />
-
-          <p className="mt-1 text-sm text-gray-500">
-            {description.length}/1000 characters
-          </p>
-        </div>
-
-        <div>
-          <label
-            htmlFor="category"
-            className="block font-medium"
-          >
-            Category
-          </label>
-
-          <select
-            id="category"
-            value={category}
-            onChange={(event) =>
-              setCategory(
-                event.target.value as TicketCategory
-              )
-            }
-            className="mt-2 w-full rounded border px-3 py-2"
-          >
-            {categories.map((option) => (
-              <option
-                key={option}
-                value={option}
-              >
-                {option}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label
-            htmlFor="priority"
-            className="block font-medium"
-          >
-            Priority
-          </label>
-
-          <select
-            id="priority"
-            value={priority}
-            onChange={(event) =>
-              setPriority(
-                event.target.value as
-                  | TicketPriority
-                  | ""
-              )
-            }
-            className="mt-2 w-full rounded border px-3 py-2"
-          >
-            <option value="">
-              No priority
-            </option>
-
-            {priorities.map((option) => (
-              <option
-                key={option}
-                value={option}
-              >
-                {option}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="rounded bg-blue-600 px-5 py-2 font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {isSubmitting
-            ? "Creating..."
-            : "Create Ticket"}
-        </button>
-      </form>
-    </main>
+    </AppShell>
   );
 }

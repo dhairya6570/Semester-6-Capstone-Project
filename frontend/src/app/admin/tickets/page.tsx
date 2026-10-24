@@ -1,19 +1,47 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getSession } from "@/lib/api/auth";
-import {
-  getTickets,
-  type Ticket,
-} from "@/lib/api/tickets";
+import { getTickets, type Ticket } from "@/lib/api/tickets";
+import AppShell from "@/components/layout/AppShell";
+
+function getStatusClass(status: string) {
+  switch (status) {
+    case "Open":
+      return "bg-[#E7F0FF] text-[#2458A6]";
+    case "In Progress":
+      return "bg-[#FFF3DB] text-[#8B5B12]";
+    case "Resolved":
+      return "bg-[#E4F4EF] text-[#086B55]";
+    case "Closed":
+      return "bg-[#E9EEF1] text-[#435662]";
+    default:
+      return "bg-[#E9EEF1] text-[#435662]";
+  }
+}
+
+function getPriorityClass(priority: string | null) {
+  switch (priority) {
+    case "High":
+      return "bg-[#FFF0F1] text-[#B4233B]";
+    case "Medium":
+      return "bg-[#FFF3DB] text-[#8B5B12]";
+    case "Low":
+      return "bg-[#E4F4EF] text-[#086B55]";
+    default:
+      return "bg-[#E9EEF1] text-[#435662]";
+  }
+}
 
 export default function AdminTicketsPage() {
   const router = useRouter();
 
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAuthorized, setIsAuthorized] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -31,6 +59,8 @@ export default function AdminTicketsPage() {
           return;
         }
 
+        setIsAuthorized(true);
+
         const ticketData = await getTickets();
         setTickets(ticketData);
       } catch (err) {
@@ -47,104 +77,182 @@ export default function AdminTicketsPage() {
     loadTickets();
   }, [router]);
 
-  if (isLoading) {
+  if (!isAuthorized) {
     return (
-      <main className="p-8">
-        <p>Loading tickets...</p>
+      <main className="flex min-h-screen items-center justify-center bg-[#F4F7F8] px-5">
+        <p role="status" className="text-sm text-[#405462]">
+          Checking session...
+        </p>
       </main>
     );
   }
 
   return (
-    <main className="mx-auto max-w-6xl p-8">
-      <div className="mb-8">
-        <Link
-          href="/admin"
-          className="text-blue-600 hover:underline"
+    <AppShell role="Administrator">
+      <div className="space-y-8">
+        <header>
+          <p className="mb-2 text-sm font-semibold uppercase tracking-widest text-[#087F70]">
+            Administrator Workspace
+          </p>
+
+          <h1 className="text-3xl font-bold tracking-tight text-[#101F2B] sm:text-4xl">
+            Support Tickets
+          </h1>
+
+          <p className="mt-3 text-base text-[#526672]">
+            Review and manage IT support requests submitted by
+            employees.
+          </p>
+        </header>
+
+        <section
+          aria-labelledby="ticket-list-heading"
+          className="overflow-hidden rounded-2xl border border-[#DCE6E9] bg-white shadow-sm"
         >
-          ← Back to Admin Dashboard
-        </Link>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E1E9EC] px-6 py-5">
+            <h2
+              id="ticket-list-heading"
+              className="text-lg font-bold text-[#101F2B]"
+            >
+              All Support Tickets
+            </h2>
 
-        <h1 className="mt-4 text-3xl font-bold">
-          Support Tickets
-        </h1>
+            {!isLoading && !error && (
+              <span className="rounded-full bg-[#E4F4EF] px-3 py-1 text-xs font-semibold text-[#086B55]">
+                {tickets.length}{" "}
+                {tickets.length === 1 ? "Ticket" : "Tickets"}
+              </span>
+            )}
+          </div>
 
-        <p className="mt-2 text-gray-600">
-          View and manage support tickets submitted by employees.
-        </p>
-      </div>
+          {error && (
+            <div className="p-6">
+              <p
+                role="alert"
+                className="rounded-xl border border-[#F1C9CF] bg-[#FFF1F2] px-4 py-3 text-sm text-[#B4233B]"
+              >
+                {error}
+              </p>
+            </div>
+          )}
 
-      {error && (
-        <p
-          role="alert"
-          className="mb-6 rounded border border-red-300 bg-red-50 p-4 text-red-700"
-        >
-          {error}
-        </p>
-      )}
+          {isLoading && (
+            <div className="px-6 py-12 text-center">
+              <p role="status" className="text-sm text-[#526672]">
+                Loading support tickets...
+              </p>
+            </div>
+          )}
 
-      {!error && tickets.length === 0 && (
-        <div className="rounded border p-6">
-          <p>No support tickets have been submitted yet.</p>
-        </div>
-      )}
-
-      {!error && tickets.length > 0 && (
-        <div className="overflow-x-auto rounded border">
-          <table className="w-full text-left">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="p-4">ID</th>
-                <th className="p-4">Title</th>
-                <th className="p-4">Category</th>
-                <th className="p-4">Priority</th>
-                <th className="p-4">Status</th>
-                <th className="p-4">Created</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {tickets.map((ticket) => (
-                <tr
-                  key={ticket.id}
-                  className="border-t"
+          {!isLoading && !error && tickets.length === 0 && (
+            <div className="px-6 py-16 text-center">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#E4F4EF] text-[#087F70]">
+                <svg
+                  aria-hidden="true"
+                  className="h-8 w-8"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
                 >
-                  <td className="p-4">
-                    #{ticket.id}
-                  </td>
+                  <path d="M4 5h16v14H4z" />
+                  <path d="M8 9h8M8 13h8M8 17h5" />
+                </svg>
+              </div>
 
-                  <td className="p-4">
-                    <Link
-                      href={`/admin/tickets/${ticket.id}`}
-                      className="font-medium text-blue-600 hover:underline"
+              <h3 className="mt-5 text-lg font-bold text-[#101F2B]">
+                No support tickets yet
+              </h3>
+
+              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#526672]">
+                No employee support requests have been submitted.
+                New tickets will appear here when employees create them.
+              </p>
+            </div>
+          )}
+
+          {!isLoading && !error && tickets.length > 0 && (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[780px] text-left text-sm">
+                <thead className="bg-[#F4F7F8] text-xs uppercase tracking-wider text-[#526672]">
+                  <tr>
+                    <th scope="col" className="px-5 py-4 font-semibold">
+                      Ticket ID
+                    </th>
+                    <th scope="col" className="px-5 py-4 font-semibold">
+                      Title
+                    </th>
+                    <th scope="col" className="px-5 py-4 font-semibold">
+                      Category
+                    </th>
+                    <th scope="col" className="px-5 py-4 font-semibold">
+                      Priority
+                    </th>
+                    <th scope="col" className="px-5 py-4 font-semibold">
+                      Status
+                    </th>
+                    <th scope="col" className="px-5 py-4 font-semibold">
+                      Created
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody className="divide-y divide-[#E1E9EC]">
+                  {tickets.map((ticket) => (
+                    <tr
+                      key={ticket.id}
+                      className="transition-colors hover:bg-[#F8FAFB]"
                     >
-                      {ticket.title}
-                    </Link>
-                  </td>
+                      <td className="whitespace-nowrap px-5 py-4 font-semibold text-[#526672]">
+                        #{ticket.id}
+                      </td>
 
-                  <td className="p-4">
-                    {ticket.category}
-                  </td>
+                      <td className="px-5 py-4">
+                        <Link
+                          href={`/admin/tickets/${ticket.id}`}
+                          className="font-semibold text-[#087F70] hover:underline"
+                        >
+                          {ticket.title}
+                        </Link>
+                      </td>
 
-                  <td className="p-4">
-                    {ticket.priority ?? "Not set"}
-                  </td>
+                      <td className="px-5 py-4 text-[#405462]">
+                        {ticket.category}
+                      </td>
 
-                  <td className="p-4">
-                    {ticket.status}
-                  </td>
+                      <td className="px-5 py-4">
+                        <span
+                          className={`inline-flex whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${getPriorityClass(
+                            ticket.priority
+                          )}`}
+                        >
+                          {ticket.priority ?? "Not set"}
+                        </span>
+                      </td>
 
-                  <td className="p-4">
-                    {new Date(
-                      ticket.created_at
-                    ).toLocaleDateString()}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </main>
+                      <td className="px-5 py-4">
+                        <span
+                          className={`inline-flex whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${getStatusClass(
+                            ticket.status
+                          )}`}
+                        >
+                          {ticket.status}
+                        </span>
+                      </td>
+
+                      <td className="whitespace-nowrap px-5 py-4 text-[#526672]">
+                        {new Date(
+                          ticket.created_at
+                        ).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      </div>
+    </AppShell>
   );
 }

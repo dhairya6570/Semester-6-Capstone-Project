@@ -89,3 +89,54 @@ export async function POST(request: NextRequest) {
     { status: 201 }
   );
 }
+
+export async function GET() {
+  const supabase = await createSupabaseServerClient();
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return NextResponse.json(
+      { error: "Authentication required." },
+      { status: 401 }
+    );
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (
+    profileError ||
+    !profile ||
+    !isAdministrator(profile.role)
+  ) {
+    return NextResponse.json(
+      { error: "Administrator access required." },
+      { status: 403 }
+    );
+  }
+
+  const { data: employees, error } = await supabase
+    .from("profiles")
+    .select("id, full_name")
+    .eq("role", "Employee")
+    .order("full_name", { ascending: true });
+
+  if (error) {
+    return NextResponse.json(
+      { error: "Unable to load employees." },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json(
+    { employees: employees ?? [] },
+    { status: 200 }
+  );
+}

@@ -869,6 +869,62 @@
           ]
         }
       }
+    },
+    {
+      "name": "API-14 - Assign Asset",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('API-14: returns HTTP 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('API-14: confirms successful assignment', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.message).to.eql('Asset assigned successfully.');",
+              "    pm.expect(json.assignment).to.exist;",
+              "    pm.expect(json.assignment.asset_id).to.eql(Number(pm.collectionVariables.get('assetId')));",
+              "    pm.expect(json.assignment.user_id).to.eql('4ed0dcb8-2406-4876-ba8b-c9eb2c73f87f');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": \"4ed0dcb8-2406-4876-ba8b-c9eb2c73f87f\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3001/api/assets/{{assetId}}/assign",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "api",
+            "assets",
+            "{{assetId}}",
+            "assign"
+          ]
+        }
+      }
     }
   ]
 }

@@ -40,3 +40,25 @@ export async function createUser(
 
   return data;
 }
+
+export interface Employee {
+  id: string;
+  full_name: string;
+}
+
+export async function getEmployees(): Promise<Employee[]> {
+  const response = await fetch(`${API_URL}/api/admin/users`, {
+    method: "GET",
+    credentials: "include",
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.error || "Unable to load employees."
+    );
+  }
+
+  return data.employees;
+}

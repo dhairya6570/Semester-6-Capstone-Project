@@ -831,6 +831,142 @@
           ]
         }
       }
+    },
+    {
+      "name": "API-14 - Assign Asset",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('API-14: returns HTTP 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('API-14: confirms successful assignment', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.message).to.eql('Asset assigned successfully.');",
+              "    pm.expect(json.assignment).to.exist;",
+              "    pm.expect(json.assignment.asset_id).to.eql(Number(pm.collectionVariables.get('assetId')));",
+              "    pm.expect(json.assignment.user_id).to.eql('4ed0dcb8-2406-4876-ba8b-c9eb2c73f87f');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": \"4ed0dcb8-2406-4876-ba8b-c9eb2c73f87f\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3001/api/assets/{{assetId}}/assign",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "api",
+            "assets",
+            "{{assetId}}",
+            "assign"
+          ]
+        }
+      }
+    },
+    {
+      "name": "API-13 - Reject Assigned Asset Deletion",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('API-13: returns HTTP 400', function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "",
+              "pm.test('API-13: prevents deletion of assigned asset', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.error).to.eql('Cannot delete an asset that is currently assigned.');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3001/api/assets/{{assetId}}",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "api",
+            "assets",
+            "{{assetId}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "API-15 - Unassign Asset",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('API-15: returns HTTP 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('API-15: confirms successful unassignment', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.message).to.eql('Asset unassigned successfully.');",
+              "    pm.expect(json.assignment).to.exist;",
+              "    pm.expect(json.assignment.asset_id).to.eql(Number(pm.collectionVariables.get('assetId')));",
+              "    pm.expect(json.assignment.returned_date).to.not.be.null;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3001/api/assets/{{assetId}}/unassign",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "api",
+            "assets",
+            "{{assetId}}",
+            "unassign"
+          ]
+        }
+      }
     }
   ]
 }

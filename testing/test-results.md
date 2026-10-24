@@ -448,3 +448,110 @@ Testing limitations:
 Week 7 automated testing: PASS within the documented test scope.
 
 Asset CRUD functionality has been implemented and verified through automated tests and manual testing. Asset assignment and unassignment functionality will be developed and tested separately during Week 8.
+
+
+
+
+
+## Week 8 - Asset Assignment Management
+
+### Jest Unit Tests
+
+Command:
+
+`cd backend`
+
+`npm test -- --runInBand`
+
+Results:
+
+- Test Suites: 11 passed, 11 total
+- Tests: 88 passed, 88 total
+- Failures: 0
+
+Week 8 tests completed:
+
+- Asset assignment validation tests: PASS
+- Asset unassignment validation tests: PASS
+- Employee assigned-assets validation tests: PASS
+- All previous Jest regression tests continue to pass.
+
+### Postman API Tests
+
+Command:
+
+`postman collection run postman/authentication.postman_collection.json`
+
+Results:
+
+- Requests: 23 executed, 0 failed
+- Test Scripts: 23 executed, 0 failed
+- Prerequest Scripts: 2 executed, 0 failed
+- Assertions: 45 executed, 0 failed
+- Duration: approximately 8.9 seconds
+
+Week 8 API tests completed:
+
+- API-13 - Reject deletion of an assigned asset (HTTP 400): PASS
+- API-14 - Assign an asset to an employee (HTTP 200): PASS
+- API-15 - Unassign an asset (HTTP 200): PASS
+
+Regression testing:
+
+- Previous API-01 through API-12 tests continue to pass.
+
+Testing observation:
+
+- Postman CLI displayed a warning because it was not logged in for cloud publishing.
+- All local API tests completed successfully with zero failures.
+- Cloud publishing was not required for local testing.
+
+### Cypress End-to-End Tests
+
+Command:
+
+`CYPRESS_adminPassword="Test@123" CYPRESS_employeePassword="Test@1234" npx cypress run --browser chrome`
+
+Results:
+
+- Specs: 4 passed, 4 total
+- Tests: 8 passed, 8 total
+- Failures: 0
+- Browser: Chrome 155 (headless)
+- Duration: approximately 31 seconds
+
+Week 8 tests completed:
+
+- UI-09 - Administrator assigns an asset to an employee: PASS
+- UI-10 - Employee views their assigned assets: PASS
+
+Regression testing:
+
+- UI-03 - Employee submits a support ticket: PASS
+- UI-04 - Employee views support ticket details: PASS
+- UI-05 - Administrator views employee support tickets: PASS
+- UI-06 - Administrator updates ticket status: PASS
+- UI-07 - Internal ticket notes are restricted to administrators: PASS
+- UI-08 - Administrator creates an asset and sees it in the asset list: PASS
+
+Testing observation:
+
+- An initial full Cypress run failed because the password environment variables were missing.
+- After supplying the required test credentials, all eight Cypress tests passed.
+- No application code changes were required to resolve this configuration issue.
+
+### Code Quality Checks
+
+- Frontend TypeScript (`npx tsc --noEmit`): PASS
+- Backend TypeScript (`npx tsc --noEmit`): PASS
+- Frontend ESLint: PASS
+- Backend ESLint: PASS
+- Backend Jest regression: PASS
+- Postman API regression: PASS
+- Cypress frontend regression: PASS
+
+### Overall Result
+
+Week 8 automated testing: PASS within the documented test scope.
+
+Asset assignment and unassignment functionality has been implemented and verified through Postman API tests, Cypress end-to-end tests, Jest unit tests, and code quality checks. Employees can view assets assigned to their accounts, and administrators can assign and unassign assets through the frontend.

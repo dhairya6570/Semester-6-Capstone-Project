@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -14,6 +15,39 @@ import {
   type TicketNote,
   type TicketStatus,
 } from "@/lib/api/tickets";
+import AppShell from "@/components/layout/AppShell";
+
+function getStatusClass(status: string) {
+  switch (status) {
+    case "Open":
+      return "bg-[#E7F0FF] text-[#2458A6]";
+    case "In Progress":
+      return "bg-[#FFF3DB] text-[#8B5B12]";
+    case "Resolved":
+      return "bg-[#E4F4EF] text-[#086B55]";
+    case "Closed":
+      return "bg-[#E9EEF1] text-[#435662]";
+    default:
+      return "bg-[#E9EEF1] text-[#435662]";
+  }
+}
+
+function getPriorityClass(priority: string | null) {
+  switch (priority) {
+    case "High":
+      return "bg-[#FFF0F1] text-[#B4233B]";
+    case "Medium":
+      return "bg-[#FFF3DB] text-[#8B5B12]";
+    case "Low":
+      return "bg-[#E4F4EF] text-[#086B55]";
+    default:
+      return "bg-[#E9EEF1] text-[#435662]";
+  }
+}
+
+function formatDate(value: string) {
+  return new Date(value).toLocaleString();
+}
 
 export default function AdminTicketDetailPage() {
   const router = useRouter();
@@ -25,9 +59,12 @@ export default function AdminTicketDetailPage() {
     useState<TicketStatus>("Open");
   const [noteText, setNoteText] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [isAuthorized, setIsAuthorized] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isAddingNote, setIsAddingNote] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] =
+    useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -45,6 +82,8 @@ export default function AdminTicketDetailPage() {
           router.replace("/dashboard");
           return;
         }
+
+        setIsAuthorized(true);
 
         const id = Number(params.id);
 
@@ -74,9 +113,7 @@ export default function AdminTicketDetailPage() {
   }, [params.id, router]);
 
   async function handleStatusUpdate() {
-    if (!ticket) {
-      return;
-    }
+    if (!ticket) return;
 
     setError("");
     setSuccessMessage("");
@@ -90,9 +127,7 @@ export default function AdminTicketDetailPage() {
 
       setTicket(updatedTicket);
       setSelectedStatus(updatedTicket.status);
-      setSuccessMessage(
-        "Ticket status updated successfully."
-      );
+      setSuccessMessage("Ticket status updated successfully.");
     } catch (err) {
       setError(
         err instanceof Error
@@ -105,28 +140,18 @@ export default function AdminTicketDetailPage() {
   }
 
   async function handleAddNote() {
-    if (!ticket) {
-      return;
-    }
+    if (!ticket || noteText.trim().length === 0) return;
 
     setError("");
     setSuccessMessage("");
     setIsAddingNote(true);
 
     try {
-      const newNote = await addTicketNote(
-        ticket.id,
-        noteText
-      );
+      const newNote = await addTicketNote(ticket.id, noteText);
 
-      setNotes((currentNotes) => [
-        ...currentNotes,
-        newNote,
-      ]);
+      setNotes((currentNotes) => [...currentNotes, newNote]);
       setNoteText("");
-      setSuccessMessage(
-        "Internal note added successfully."
-      );
+      setSuccessMessage("Internal note added successfully.");
     } catch (err) {
       setError(
         err instanceof Error
@@ -139,17 +164,7 @@ export default function AdminTicketDetailPage() {
   }
 
   async function handleDeleteTicket() {
-    if (!ticket) {
-      return;
-    }
-
-    const confirmed = window.confirm(
-      `Are you sure you want to delete Ticket #${ticket.id}? This action cannot be undone.`
-    );
-
-    if (!confirmed) {
-      return;
-    }
+    if (!ticket) return;
 
     setError("");
     setSuccessMessage("");
@@ -164,121 +179,164 @@ export default function AdminTicketDetailPage() {
           ? err.message
           : "Unable to delete ticket."
       );
+      setShowDeleteConfirmation(false);
+    } finally {
       setIsDeleting(false);
     }
   }
 
-  if (isLoading) {
+  if (!isAuthorized) {
     return (
-      <main className="p-8">
-        <p>Loading ticket...</p>
+      <main className="flex min-h-screen items-center justify-center bg-[#F4F7F8] px-5">
+        <p role="status" className="text-sm text-[#405462]">
+          Checking session...
+        </p>
       </main>
     );
   }
 
   return (
-    <main className="mx-auto max-w-3xl p-8">
-      <Link
-        href="/admin/tickets"
-        className="text-blue-600 hover:underline"
-      >
-        ← Back to Support Tickets
-      </Link>
+    <AppShell role="Administrator">
+      <div className="mx-auto w-full max-w-6xl space-y-7">
+        <header>
+          <p className="mb-2 text-sm font-semibold uppercase tracking-widest text-[#087F70]">
+            Administrator Workspace
+          </p>
 
-      {error && (
-        <p
-          role="alert"
-          className="mt-6 rounded border border-red-300 bg-red-50 p-4 text-red-700"
-        >
-          {error}
-        </p>
-      )}
+          <p className="text-sm font-semibold text-[#526672]">
+            {ticket ? `Ticket #${ticket.id}` : "Ticket Details"}
+          </p>
 
-      {successMessage && (
-        <p
-          role="status"
-          className="mt-6 rounded border border-green-300 bg-green-50 p-4 text-green-700"
-        >
-          {successMessage}
-        </p>
-      )}
+          <h1 className="mt-2 break-words text-3xl font-bold tracking-tight text-[#101F2B] sm:text-4xl">
+            {ticket?.title ?? "Support Ticket"}
+          </h1>
 
-      {ticket && (
-        <>
-          <div className="mt-6">
-            <p className="text-sm text-gray-500">
-              Ticket #{ticket.id}
-            </p>
+          <p className="mt-3 text-base text-[#526672]">
+            Review ticket information, update its status, and manage
+            internal support notes.
+          </p>
+        </header>
 
-            <h1 className="mt-1 text-3xl font-bold">
-              {ticket.title}
-            </h1>
-          </div>
+        {error && (
+          <p
+            role="alert"
+            className="rounded-xl border border-[#F1C9CF] bg-[#FFF1F2] px-5 py-4 text-sm text-[#B4233B]"
+          >
+            {error}
+          </p>
+        )}
 
-          <div className="mt-8 rounded border p-6">
-            <dl className="grid gap-6 sm:grid-cols-2">
-              <div>
-                <dt className="font-semibold">
-                  Status
-                </dt>
-                <dd className="mt-1">
-                  {ticket.status}
-                </dd>
+        {successMessage && (
+          <p
+            role="status"
+            className="rounded-xl border border-[#BDE4D6] bg-[#E4F4EF] px-5 py-4 text-sm text-[#086B55]"
+          >
+            {successMessage}
+          </p>
+        )}
+
+        {isLoading && (
+          <p role="status" className="text-sm text-[#526672]">
+            Loading ticket details...
+          </p>
+        )}
+
+        {!isLoading && ticket && (
+          <>
+            <section className="overflow-hidden rounded-2xl border border-[#DCE6E9] bg-white shadow-sm">
+              <div className="border-b border-[#E1E9EC] px-6 py-5 sm:px-8">
+                <h2 className="text-xl font-bold text-[#101F2B]">
+                  Ticket Overview
+                </h2>
+                <p className="mt-1 text-sm text-[#526672]">
+                  Current information for this support request.
+                </p>
               </div>
 
-              <div>
-                <dt className="font-semibold">
-                  Priority
-                </dt>
-                <dd className="mt-1">
-                  {ticket.priority ?? "Not set"}
-                </dd>
-              </div>
-
-              <div>
-                <dt className="font-semibold">
-                  Category
-                </dt>
-                <dd className="mt-1">
-                  {ticket.category}
-                </dd>
-              </div>
-
-              <div>
-                <dt className="font-semibold">
-                  Created
-                </dt>
-                <dd className="mt-1">
-                  {new Date(
-                    ticket.created_at
-                  ).toLocaleString()}
-                </dd>
-              </div>
-
-              <div>
-                <dt className="font-semibold">
-                  Last Updated
-                </dt>
-                <dd className="mt-1">
-                  {new Date(
-                    ticket.updated_at
-                  ).toLocaleString()}
-                </dd>
-              </div>
-            </dl>
-
-            <div className="mt-8 border-t pt-6">
-              <h2 className="text-lg font-semibold">
-                Update Status
-              </h2>
-
-              <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end">
+              <dl className="grid gap-7 px-6 py-7 sm:grid-cols-2 sm:px-8 lg:grid-cols-3">
                 <div>
+                  <dt className="mb-2 text-sm font-semibold text-[#526672]">
+                    Status
+                  </dt>
+                  <dd>
+                    <span
+                      className={`inline-flex rounded-full px-3 py-1 text-sm font-semibold ${getStatusClass(
+                        ticket.status
+                      )}`}
+                    >
+                      {ticket.status}
+                    </span>
+                  </dd>
+                </div>
+
+                <div>
+                  <dt className="mb-2 text-sm font-semibold text-[#526672]">
+                    Priority
+                  </dt>
+                  <dd>
+                    <span
+                      className={`inline-flex rounded-full px-3 py-1 text-sm font-semibold ${getPriorityClass(
+                        ticket.priority
+                      )}`}
+                    >
+                      {ticket.priority ?? "Not set"}
+                    </span>
+                  </dd>
+                </div>
+
+                <div>
+                  <dt className="mb-2 text-sm font-semibold text-[#526672]">
+                    Category
+                  </dt>
+                  <dd className="text-[#101F2B]">
+                    {ticket.category}
+                  </dd>
+                </div>
+
+                <div>
+                  <dt className="mb-2 text-sm font-semibold text-[#526672]">
+                    Created On
+                  </dt>
+                  <dd className="text-[#101F2B]">
+                    {formatDate(ticket.created_at)}
+                  </dd>
+                </div>
+
+                <div>
+                  <dt className="mb-2 text-sm font-semibold text-[#526672]">
+                    Last Updated
+                  </dt>
+                  <dd className="text-[#101F2B]">
+                    {formatDate(ticket.updated_at)}
+                  </dd>
+                </div>
+
+                <div>
+                  <dt className="mb-2 text-sm font-semibold text-[#526672]">
+                    Ticket ID
+                  </dt>
+                  <dd className="text-[#101F2B]">
+                    #{ticket.id}
+                  </dd>
+                </div>
+              </dl>
+            </section>
+
+            <section className="rounded-2xl border border-[#DCE6E9] bg-white p-6 shadow-sm sm:p-8">
+              <h2 className="text-xl font-bold text-[#101F2B]">
+                Update Ticket Status
+              </h2>
+              <p className="mt-2 text-sm text-[#526672]">
+                Change the progress of this support request.
+              </p>
+
+              <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-end">
+                <div className="w-full sm:max-w-xs">
                   <label
                     htmlFor="ticket-status"
-                    className="block text-sm font-medium"
+                    className="mb-2 block text-sm font-semibold text-[#101F2B]"
                   >
-                    Ticket status
+                    Ticket Status
                   </label>
 
                   <select
@@ -290,18 +348,12 @@ export default function AdminTicketDetailPage() {
                       )
                     }
                     disabled={isSaving || isDeleting}
-                    className="mt-1 rounded border px-3 py-2"
+                    className="min-h-12 w-full rounded-xl border border-[#CBDDE1] bg-white px-4 py-3 text-sm text-[#101F2B] focus:border-[#087F70] focus:outline-none focus:ring-2 focus:ring-[#087F70]/20 disabled:opacity-50"
                   >
                     <option value="Open">Open</option>
-                    <option value="In Progress">
-                      In Progress
-                    </option>
-                    <option value="Resolved">
-                      Resolved
-                    </option>
-                    <option value="Closed">
-                      Closed
-                    </option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Resolved">Resolved</option>
+                    <option value="Closed">Closed</option>
                   </select>
                 </div>
 
@@ -313,77 +365,71 @@ export default function AdminTicketDetailPage() {
                     isDeleting ||
                     selectedStatus === ticket.status
                   }
-                  className="rounded bg-blue-600 px-4 py-2 text-white disabled:cursor-not-allowed disabled:opacity-50"
+                  className="min-h-12 rounded-xl bg-[#087F70] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#06695D] disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {isSaving
-                    ? "Saving..."
-                    : "Save Status"}
+                  {isSaving ? "Saving..." : "Save Status"}
                 </button>
               </div>
-            </div>
+            </section>
 
-            <div className="mt-8 border-t pt-6">
-              <h2 className="text-lg font-semibold">
-                Description
+            <section className="rounded-2xl border border-[#DCE6E9] bg-white p-6 shadow-sm sm:p-8">
+              <h2 className="text-xl font-bold text-[#101F2B]">
+                Issue Description
               </h2>
 
-              <p className="mt-2 whitespace-pre-wrap">
+              <p className="mt-4 whitespace-pre-wrap break-words leading-7 text-[#405462]">
                 {ticket.description}
               </p>
-            </div>
+            </section>
 
-            <div className="mt-8 border-t pt-6">
-              <h2 className="text-lg font-semibold">
+            <section className="rounded-2xl border border-[#DCE6E9] bg-white p-6 shadow-sm sm:p-8">
+              <h2 className="text-xl font-bold text-[#101F2B]">
                 Internal Notes
               </h2>
 
-              <p className="mt-1 text-sm text-gray-600">
-                Internal notes are visible only to administrators.
+              <p className="mt-2 text-sm text-[#526672]">
+                These notes are visible only to administrators.
               </p>
 
-              {notes.length === 0 ? (
-                <p className="mt-4 text-gray-600">
-                  No internal notes have been added.
-                </p>
-              ) : (
-                <div className="mt-4 space-y-4">
-                  {notes.map((note) => (
-                    <div
+              <div className="mt-6 space-y-4">
+                {notes.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-[#CBDDE1] bg-[#F8FAFB] px-5 py-6 text-sm text-[#526672]">
+                    No internal notes have been added.
+                  </div>
+                ) : (
+                  notes.map((note) => (
+                    <article
                       key={note.id}
-                      className="rounded border bg-gray-50 p-4"
+                      className="rounded-xl border border-[#E1E9EC] bg-[#F8FAFB] p-5"
                     >
-                      <p className="whitespace-pre-wrap">
+                      <p className="whitespace-pre-wrap break-words leading-6 text-[#101F2B]">
                         {note.note_text}
                       </p>
 
-                      <p className="mt-2 text-sm text-gray-500">
-                        {new Date(
-                          note.created_at
-                        ).toLocaleString()}
+                      <p className="mt-3 text-xs text-[#526672]">
+                        {formatDate(note.created_at)}
                       </p>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    </article>
+                  ))
+                )}
+              </div>
 
-              <div className="mt-6">
+              <div className="mt-7">
                 <label
                   htmlFor="internal-note"
-                  className="block font-medium"
+                  className="mb-2 block text-sm font-semibold text-[#101F2B]"
                 >
-                  Add internal note
+                  Add Internal Note
                 </label>
 
                 <textarea
                   id="internal-note"
                   value={noteText}
-                  onChange={(event) =>
-                    setNoteText(event.target.value)
-                  }
+                  onChange={(event) => setNoteText(event.target.value)}
                   rows={4}
                   disabled={isAddingNote || isDeleting}
-                  className="mt-2 w-full rounded border px-3 py-2"
                   placeholder="Enter an internal note..."
+                  className="w-full resize-y rounded-xl border border-[#CBDDE1] bg-white px-4 py-3 text-sm text-[#101F2B] placeholder:text-[#647782] focus:border-[#087F70] focus:outline-none focus:ring-2 focus:ring-[#087F70]/20 disabled:opacity-50"
                 />
 
                 <button
@@ -394,39 +440,80 @@ export default function AdminTicketDetailPage() {
                     isDeleting ||
                     noteText.trim().length === 0
                   }
-                  className="mt-3 rounded bg-blue-600 px-4 py-2 text-white disabled:cursor-not-allowed disabled:opacity-50"
+                  className="mt-4 min-h-12 rounded-xl bg-[#087F70] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#06695D] disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {isAddingNote
-                    ? "Adding..."
-                    : "Add Note"}
+                  {isAddingNote ? "Adding..." : "Add Note"}
                 </button>
               </div>
-            </div>
+            </section>
 
-            <div className="mt-8 border-t pt-6">
-              <h2 className="text-lg font-semibold">
+            <section className="rounded-2xl border border-[#F1C9CF] bg-white p-6 shadow-sm sm:p-8">
+              <h2 className="text-xl font-bold text-[#B4233B]">
                 Delete Ticket
               </h2>
 
-              <p className="mt-1 text-sm text-gray-600">
-                Permanently delete this support ticket.
-                This action cannot be undone.
+              <p className="mt-2 text-sm leading-6 text-[#526672]">
+                Permanently delete this support ticket and its
+                associated information. This action cannot be undone.
               </p>
 
-              <button
-                type="button"
-                onClick={handleDeleteTicket}
-                disabled={isDeleting}
-                className="mt-4 rounded bg-red-600 px-4 py-2 text-white disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {isDeleting
-                  ? "Deleting..."
-                  : "Delete Ticket"}
-              </button>
-            </div>
-          </div>
-        </>
-      )}
-    </main>
+              {!showDeleteConfirmation ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setError("");
+                    setSuccessMessage("");
+                    setShowDeleteConfirmation(true);
+                  }}
+                  disabled={isDeleting || isSaving || isAddingNote}
+                  className="mt-5 min-h-12 rounded-xl border border-[#B4233B] px-6 py-3 text-sm font-semibold text-[#B4233B] transition-colors hover:bg-[#FFF1F2] disabled:opacity-50"
+                >
+                  Delete Ticket
+                </button>
+              ) : (
+                <div className="mt-5 rounded-xl border border-[#F1C9CF] bg-[#FFF1F2] p-5">
+                  <p className="font-semibold text-[#B4233B]">
+                    Are you sure you want to delete Ticket #{ticket.id}?
+                  </p>
+
+                  <p className="mt-2 text-sm text-[#8F2638]">
+                    This action is permanent and cannot be undone.
+                  </p>
+
+                  <div className="mt-5 flex flex-wrap gap-3">
+                    <button
+                      type="button"
+                      onClick={handleDeleteTicket}
+                      disabled={isDeleting}
+                      className="min-h-11 rounded-xl bg-[#B4233B] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#921C30] disabled:opacity-50"
+                    >
+                      {isDeleting ? "Deleting..." : "Yes, Delete Ticket"}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowDeleteConfirmation(false)}
+                      disabled={isDeleting}
+                      className="min-h-11 rounded-xl border border-[#CBDDE1] bg-white px-5 py-2.5 text-sm font-semibold text-[#101F2B] hover:bg-[#F4F7F8] disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+            </section>
+          </>
+        )}
+
+        <div>
+          <Link
+            href="/admin/tickets"
+            className="inline-flex min-h-12 items-center justify-center rounded-xl border border-[#CBDDE1] bg-white px-5 py-3 text-sm font-semibold text-[#101F2B] transition-colors hover:bg-[#EAF3F2]"
+          >
+            ← Back to Support Tickets
+          </Link>
+        </div>
+      </div>
+    </AppShell>
   );
 }

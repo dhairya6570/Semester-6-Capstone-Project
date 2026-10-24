@@ -1,26 +1,99 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f4f7f8;
+  --foreground: #172c37;
+
+  --sidebar: #101f2b;
+  --sidebar-hover: #1c3945;
+
+  --primary: #087f70;
+  --primary-hover: #066759;
+
+  --accent: #d6a35b;
+
+  --surface: #ffffff;
+  --border: #dfe7e9;
+  --muted: #526772;
+
+  --error: #b4233b;
+  --success: #08745b;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
+  margin: 0;
+  min-height: 100vh;
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
+}
+
+[role="alert"] {
+  color: #8f1d32;
+  background: #fff0f2;
+  border: 1px solid #efbac4;
+  border-radius: 0.75rem;
+  padding: 0.875rem 1rem;
+}
+
+[role="status"] {
+  color: #12634d;
+  background: #e8f7ef;
+  border: 1px solid #b5e3cb;
+  border-radius: 0.75rem;
+  padding: 0.875rem 1rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

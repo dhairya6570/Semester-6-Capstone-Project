@@ -925,6 +925,48 @@
           ]
         }
       }
+    },
+    {
+      "name": "API-15 - Unassign Asset",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('API-15: returns HTTP 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('API-15: confirms successful unassignment', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.message).to.eql('Asset unassigned successfully.');",
+              "    pm.expect(json.assignment).to.exist;",
+              "    pm.expect(json.assignment.asset_id).to.eql(Number(pm.collectionVariables.get('assetId')));",
+              "    pm.expect(json.assignment.returned_date).to.not.be.null;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3001/api/assets/{{assetId}}/unassign",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "api",
+            "assets",
+            "{{assetId}}",
+            "unassign"
+          ]
+        }
+      }
     }
   ]
 }

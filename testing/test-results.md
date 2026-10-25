@@ -555,3 +555,96 @@ Testing observation:
 Week 8 automated testing: PASS within the documented test scope.
 
 Asset assignment and unassignment functionality has been implemented and verified through Postman API tests, Cypress end-to-end tests, Jest unit tests, and code quality checks. Employees can view assets assigned to their accounts, and administrators can assign and unassign assets through the frontend.
+
+
+
+
+
+
+
+## Frontend Improvements - UI Redesign and Regression Testing
+
+### Frontend Improvements
+
+Completed improvements:
+
+- Redesigned the frontend pages for both Administrator and Employee roles.
+- Improved page layouts, navigation, forms, and visual consistency.
+- Updated error and success messages to display directly on the page instead of using browser alerts or popups, following professor feedback.
+- Fixed a login/logout session-check race condition to prevent outdated session responses from interfering with authentication state.
+- Updated the UI-09 Cypress assertion to match the redesigned Assigned Employee field.
+
+### Cypress End-to-End Regression Tests
+
+Command:
+
+`CYPRESS_adminPassword="Test@123" CYPRESS_employeePassword="Test@1234" npx cypress run --browser chrome`
+
+Results:
+
+- Specs: 4 passed, 4 total
+- Tests: 8 passed, 8 total
+- Failures: 0
+- Browser: Chrome 155 (headless)
+- Duration: approximately 34 seconds
+
+Tests completed:
+
+- UI-03 - Employee submits a new support ticket: PASS
+- UI-04 - Employee views full ticket details: PASS
+- UI-05 - Administrator views tickets submitted by employees: PASS
+- UI-06 - Administrator updates ticket status to Resolved: PASS
+- UI-07 - Internal ticket notes are visible to administrators but hidden from employees: PASS
+- UI-08 - Administrator creates an asset and sees it in the asset list: PASS
+- UI-09 - Administrator assigns an asset to an employee: PASS
+- UI-10 - Employee views their assigned assets: PASS
+
+Testing observations:
+
+- The initial frontend regression run identified intermittent login/logout state behavior and an outdated Cypress assertion for the assigned employee label.
+- The login page was updated to invalidate outdated session checks during login and logout.
+- The UI-09 test was updated to verify the assigned employee using the current frontend display.
+- After these fixes, all eight Cypress tests passed together.
+
+### Backend Jest Regression Tests
+
+Command:
+
+`cd backend && npm test`
+
+Results:
+
+- Test Suites: 11 passed, 11 total
+- Tests: 88 passed, 88 total
+- Failures: 0
+- All previous backend Jest tests continue to pass.
+
+### Frontend Production Build
+
+Command:
+
+`cd frontend && npm run build`
+
+Results:
+
+- Next.js version: 16.3.5 (Turbopack)
+- Production compilation: PASS
+- TypeScript verification during build: PASS
+- Static page generation: PASS
+- Production route generation: PASS
+
+### Code Quality and Testing Summary
+
+- Frontend TypeScript (`npx tsc --noEmit`): PASS
+- Frontend production build: PASS
+- Backend Jest regression: PASS
+- Cypress frontend regression: PASS
+- Total passing automated tests: 96 (88 Jest + 8 Cypress)
+- Total automated test failures: 0
+
+### Overall Result
+
+Frontend improvements and regression testing: PASS within the documented test scope.
+
+The redesigned frontend successfully completed all eight existing Cypress end-to-end tests, and the backend passed all 88 Jest unit tests. The Next.js production build also completed successfully. The frontend improvements are ready for final review and merging into the main branch before the postponed Week 6 Vercel deployment.
+  

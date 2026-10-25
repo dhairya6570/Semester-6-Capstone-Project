@@ -61,13 +61,13 @@ describe("Asset Assignment Management", () => {
       .next("dd")
       .should("contain", "Assigned");
 
-    cy.contains("dt", "Assigned User")
+    cy.contains("dt", "Assigned Employee")
       .next("dd")
-      .should("not.contain", "Not assigned");
+      .should("contain", employeeId.slice(0, 8));
 
     cy.contains("button", "Unassign Asset").should("be.visible");
   });
-  
+
   it("UI-10 - employee views their assigned assets", () => {
     const timestamp = Date.now();
     const assetName = `Cypress UI-10 Test Laptop ${timestamp}`;
@@ -159,6 +159,4 @@ describe("Asset Assignment Management", () => {
         cy.contains(/^AST-\d+$/).should("be.visible");
       });
   });
-
 });
-

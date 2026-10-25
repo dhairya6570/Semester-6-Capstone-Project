@@ -1,7 +1,7 @@
 
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSession, login, logout } from "@/lib/api/auth";
 
@@ -15,11 +15,18 @@ export default function LoginPage() {
   const [successMessage, setSuccessMessage] = useState("");
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [currentRole, setCurrentRole] = useState("");
+  const sessionCheckVersion = useRef(0);
 
   useEffect(() => {
+    const version = ++sessionCheckVersion.current;
+
     async function checkSession() {
       try {
         const session = await getSession();
+
+        if (version !== sessionCheckVersion.current) {
+          return;
+        }
 
         if (session.authenticated && session.user) {
           setIsSignedIn(true);
@@ -27,16 +34,26 @@ export default function LoginPage() {
           setSuccessMessage(
             `Already signed in as ${session.user.email} (${session.user.role}).`,
           );
+        } else {
+          setIsSignedIn(false);
+          setCurrentRole("");
         }
       } catch {
-        setError("Unable to verify the current session.");
+        if (version === sessionCheckVersion.current) {
+          setError("Unable to verify the current session.");
+        }
       }
     }
 
     checkSession();
+
+    return () => {
+      sessionCheckVersion.current = version + 1;
+    };
   }, []);
 
   async function handleLogout() {
+    sessionCheckVersion.current++;
     setError("");
     setSuccessMessage("");
     setIsLoading(true);
@@ -60,6 +77,8 @@ export default function LoginPage() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    sessionCheckVersion.current++;
 
     setError("");
     setSuccessMessage("");

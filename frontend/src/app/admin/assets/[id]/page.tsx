@@ -24,6 +24,21 @@ function formatDate(value: string | null | undefined) {
     : date.toLocaleString();
 }
 
+function formatAssignedDate(value: string | null | undefined) {
+  if (!value) return "Not assigned";
+
+  const dateOnly = value.slice(0, 10);
+  const date = new Date(`${dateOnly}T12:00:00`);
+
+  return Number.isNaN(date.getTime())
+    ? value
+    : date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+}
+
 function formatPurchaseDate(value: string | null | undefined) {
   if (!value) return "Not provided";
 
@@ -373,9 +388,7 @@ export default function AdminAssetDetailPage() {
                     Assigned Date
                   </dt>
                   <dd className="mt-2 text-[#101F2B]">
-                    {asset.assigned_date
-                      ? formatDate(asset.assigned_date)
-                      : "Not assigned"}
+                    {formatAssignedDate(asset.assigned_date)}
                   </dd>
                 </div>
 

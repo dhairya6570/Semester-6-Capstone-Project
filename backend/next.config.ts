@@ -2,12 +2,12 @@ import type { NextConfig } from "next";
 
 const frontendUrl = process.env.FRONTEND_URL;
 
-if (!frontendUrl) {
-  throw new Error("Missing FRONTEND_URL environment variable");
-}
-
 const nextConfig: NextConfig = {
   async headers() {
+    if (!frontendUrl) {
+      return [];
+    }
+
     return [
       {
         source: "/api/:path*",

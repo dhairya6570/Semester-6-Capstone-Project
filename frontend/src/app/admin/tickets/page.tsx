@@ -5,8 +5,19 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getSession } from "@/lib/api/auth";
-import { getTickets, type Ticket } from "@/lib/api/tickets";
+import {
+  getTickets,
+  type Ticket,
+  type TicketStatus,
+} from "@/lib/api/tickets";
 import AppShell from "@/components/layout/AppShell";
+
+const TICKET_STATUSES: TicketStatus[] = [
+  "Open",
+  "In Progress",
+  "Resolved",
+  "Closed",
+];
 
 function getStatusClass(status: string) {
   switch (status) {
@@ -36,56 +47,233 @@ function getPriorityClass(priority: string | null) {
   }
 }
 
-export default function AdminTicketsPage() {
-  const router = useRouter();
+interface TicketListProps {
+  statuses: TicketStatus[];
+  search: string;
+  sort: "asc" | "desc";
+  hasActiveFilters: boolean;
+}
 
+function TicketList({
+  statuses,
+  search,
+  sort,
+  hasActiveFilters,
+}: TicketListProps) {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isAuthorized, setIsAuthorized] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    async function loadTickets() {
+    let active = true;
+
+    async function fetchTickets() {
       try {
-        const session = await getSession();
+        const ticketData = await getTickets({
+          statuses,
+          search,
+          sort,
+        });
 
-        if (!session.authenticated || !session.user) {
-          router.replace("/login");
-          return;
-        }
+        if (!active) return;
 
-        if (session.user.role !== "Administrator") {
-          router.replace("/dashboard");
-          return;
-        }
-
-        setIsAuthorized(true);
-
-        const ticketData = await getTickets();
         setTickets(ticketData);
+        setError("");
       } catch (err) {
+        if (!active) return;
+
         setError(
           err instanceof Error
             ? err.message
             : "Unable to load tickets."
         );
       } finally {
-        setIsLoading(false);
+        if (active) {
+          setIsLoading(false);
+        }
       }
     }
 
-    loadTickets();
-  }, [router]);
+    void fetchTickets();
 
-  if (!isAuthorized) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-[#F4F7F8] px-5">
-        <p role="status" className="text-sm text-[#405462]">
-          Checking session...
-        </p>
-      </main>
+    return () => {
+      active = false;
+    };
+  }, [statuses, search, sort]);
+
+  return (
+    <section
+      aria-labelledby="ticket-list-heading"
+      className="overflow-hidden rounded-2xl border border-[#DCE6E9] bg-white shadow-sm"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E1E9EC] px-6 py-5">
+        <h2
+          id="ticket-list-heading"
+          className="text-lg font-bold text-[#101F2B]"
+        >
+          All Support Tickets
+        </h2>
+
+        {!isLoading && !error && (
+          <span className="rounded-full bg-[#E4F4EF] px-3 py-1 text-xs font-semibold text-[#086B55]">
+            {tickets.length}{" "}
+            {tickets.length === 1 ? "Ticket" : "Tickets"}
+          </span>
+        )}
+      </div>
+
+      {error && (
+        <div className="p-6">
+          <p
+            role="alert"
+            className="rounded-xl border border-[#F1C9CF] bg-[#FFF1F2] px-4 py-3 text-sm text-[#B4233B]"
+          >
+            {error}
+          </p>
+        </div>
+      )}
+
+      {isLoading && (
+        <div className="px-6 py-12 text-center">
+          <p role="status" className="text-sm text-[#526672]">
+            Loading support tickets...
+          </p>
+        </div>
+      )}
+
+      {!isLoading && !error && tickets.length === 0 && (
+        <div className="px-6 py-16 text-center">
+          <h3 className="text-lg font-bold text-[#101F2B]">
+            {hasActiveFilters
+              ? "No matching tickets"
+              : "No support tickets yet"}
+          </h3>
+
+          <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#526672]">
+            {hasActiveFilters
+              ? "No tickets match your current search or filters. Try adjusting your criteria."
+              : "No employee support requests have been submitted. New tickets will appear here when employees create them."}
+          </p>
+        </div>
+      )}
+
+      {!isLoading && !error && tickets.length > 0 && (
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[780px] text-left text-sm">
+            <thead className="bg-[#F4F7F8] text-xs uppercase tracking-wider text-[#526672]">
+              <tr>
+                <th scope="col" className="px-5 py-4 font-semibold">
+                  Ticket ID
+                </th>
+                <th scope="col" className="px-5 py-4 font-semibold">
+                  Title
+                </th>
+                <th scope="col" className="px-5 py-4 font-semibold">
+                  Category
+                </th>
+                <th scope="col" className="px-5 py-4 font-semibold">
+                  Priority
+                </th>
+                <th scope="col" className="px-5 py-4 font-semibold">
+                  Status
+                </th>
+                <th scope="col" className="px-5 py-4 font-semibold">
+                  Created
+                </th>
+              </tr>
+            </thead>
+
+            <tbody className="divide-y divide-[#E1E9EC]">
+              {tickets.map((ticket) => (
+                <tr
+                  key={ticket.id}
+                  className="transition-colors hover:bg-[#F8FAFB]"
+                >
+                  <td className="whitespace-nowrap px-5 py-4 font-semibold text-[#526672]">
+                    #{ticket.id}
+                  </td>
+
+                  <td className="px-5 py-4">
+                    <Link
+                      href={`/admin/tickets/${ticket.id}`}
+                      className="font-semibold text-[#087F70] hover:underline"
+                    >
+                      {ticket.title}
+                    </Link>
+                  </td>
+
+                  <td className="px-5 py-4 text-[#405462]">
+                    {ticket.category}
+                  </td>
+
+                  <td className="px-5 py-4">
+                    <span
+                      className={`inline-flex whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${getPriorityClass(
+                        ticket.priority
+                      )}`}
+                    >
+                      {ticket.priority ?? "Not set"}
+                    </span>
+                  </td>
+
+                  <td className="px-5 py-4">
+                    <span
+                      className={`inline-flex whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${getStatusClass(
+                        ticket.status
+                      )}`}
+                    >
+                      {ticket.status}
+                    </span>
+                  </td>
+
+                  <td className="whitespace-nowrap px-5 py-4 text-[#526672]">
+                    {new Date(
+                      ticket.created_at
+                    ).toLocaleDateString()}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function AdminTicketsWorkspace() {
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
+  const [selectedStatuses, setSelectedStatuses] = useState<
+    TicketStatus[]
+  >([]);
+  const [sort, setSort] = useState<"asc" | "desc">("desc");
+
+  function toggleStatus(status: TicketStatus) {
+    setSelectedStatuses((current) =>
+      current.includes(status)
+        ? current.filter((item) => item !== status)
+        : [...current, status]
     );
   }
+
+  function clearFilters() {
+    setSearchInput("");
+    setSearch("");
+    setSelectedStatuses([]);
+    setSort("desc");
+  }
+
+  const hasActiveFilters =
+    search !== "" ||
+    selectedStatuses.length > 0 ||
+    sort !== "desc";
+
+  const queryKey = JSON.stringify({
+    selectedStatuses,
+    search,
+    sort,
+  });
 
   return (
     <AppShell role="Administrator">
@@ -106,153 +294,184 @@ export default function AdminTicketsPage() {
         </header>
 
         <section
-          aria-labelledby="ticket-list-heading"
-          className="overflow-hidden rounded-2xl border border-[#DCE6E9] bg-white shadow-sm"
+          aria-labelledby="ticket-filters-heading"
+          className="rounded-2xl border border-[#DCE6E9] bg-white p-6 shadow-sm"
         >
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E1E9EC] px-6 py-5">
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
             <h2
-              id="ticket-list-heading"
+              id="ticket-filters-heading"
               className="text-lg font-bold text-[#101F2B]"
             >
-              All Support Tickets
+              Filter Support Tickets
             </h2>
 
-            {!isLoading && !error && (
-              <span className="rounded-full bg-[#E4F4EF] px-3 py-1 text-xs font-semibold text-[#086B55]">
-                {tickets.length}{" "}
-                {tickets.length === 1 ? "Ticket" : "Tickets"}
-              </span>
-            )}
+            <button
+              type="button"
+              onClick={clearFilters}
+              disabled={!hasActiveFilters && !searchInput}
+              className="rounded-lg border border-[#DCE6E9] px-4 py-2 text-sm font-semibold text-[#405462] transition-colors hover:bg-[#F4F7F8] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Clear Filters
+            </button>
           </div>
 
-          {error && (
-            <div className="p-6">
-              <p
-                role="alert"
-                className="rounded-xl border border-[#F1C9CF] bg-[#FFF1F2] px-4 py-3 text-sm text-[#B4233B]"
+          <div className="grid gap-6 lg:grid-cols-2">
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                setSearch(searchInput.trim());
+              }}
+            >
+              <label
+                htmlFor="ticket-search"
+                className="mb-2 block text-sm font-semibold text-[#405462]"
               >
-                {error}
-              </p>
-            </div>
-          )}
+                Search by Title
+              </label>
 
-          {isLoading && (
-            <div className="px-6 py-12 text-center">
-              <p role="status" className="text-sm text-[#526672]">
-                Loading support tickets...
-              </p>
-            </div>
-          )}
+              <div className="flex gap-2">
+                <input
+                  id="ticket-search"
+                  type="search"
+                  value={searchInput}
+                  onChange={(event) =>
+                    setSearchInput(event.target.value)
+                  }
+                  maxLength={100}
+                  placeholder="Enter ticket title..."
+                  className="min-w-0 flex-1 rounded-xl border border-[#DCE6E9] px-4 py-3 text-sm text-[#101F2B] outline-none focus:border-[#087F70] focus:ring-2 focus:ring-[#087F70]/20"
+                />
 
-          {!isLoading && !error && tickets.length === 0 && (
-            <div className="px-6 py-16 text-center">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#E4F4EF] text-[#087F70]">
-                <svg
-                  aria-hidden="true"
-                  className="h-8 w-8"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
+                <button
+                  type="submit"
+                  className="rounded-xl bg-[#087F70] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#066B5F]"
                 >
-                  <path d="M4 5h16v14H4z" />
-                  <path d="M8 9h8M8 13h8M8 17h5" />
-                </svg>
+                  Search
+                </button>
               </div>
+            </form>
 
-              <h3 className="mt-5 text-lg font-bold text-[#101F2B]">
-                No support tickets yet
-              </h3>
+            <div>
+              <label
+                htmlFor="ticket-sort"
+                className="mb-2 block text-sm font-semibold text-[#405462]"
+              >
+                Sort by Creation Date
+              </label>
 
-              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#526672]">
-                No employee support requests have been submitted.
-                New tickets will appear here when employees create them.
-              </p>
+              <select
+                id="ticket-sort"
+                value={sort}
+                onChange={(event) =>
+                  setSort(event.target.value as "asc" | "desc")
+                }
+                className="w-full rounded-xl border border-[#DCE6E9] bg-white px-4 py-3 text-sm text-[#101F2B] outline-none focus:border-[#087F70] focus:ring-2 focus:ring-[#087F70]/20"
+              >
+                <option value="desc">Newest First</option>
+                <option value="asc">Oldest First</option>
+              </select>
             </div>
-          )}
+          </div>
 
-          {!isLoading && !error && tickets.length > 0 && (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[780px] text-left text-sm">
-                <thead className="bg-[#F4F7F8] text-xs uppercase tracking-wider text-[#526672]">
-                  <tr>
-                    <th scope="col" className="px-5 py-4 font-semibold">
-                      Ticket ID
-                    </th>
-                    <th scope="col" className="px-5 py-4 font-semibold">
-                      Title
-                    </th>
-                    <th scope="col" className="px-5 py-4 font-semibold">
-                      Category
-                    </th>
-                    <th scope="col" className="px-5 py-4 font-semibold">
-                      Priority
-                    </th>
-                    <th scope="col" className="px-5 py-4 font-semibold">
-                      Status
-                    </th>
-                    <th scope="col" className="px-5 py-4 font-semibold">
-                      Created
-                    </th>
-                  </tr>
-                </thead>
+          <fieldset className="mt-6">
+            <legend className="mb-3 text-sm font-semibold text-[#405462]">
+              Filter by Status
+            </legend>
 
-                <tbody className="divide-y divide-[#E1E9EC]">
-                  {tickets.map((ticket) => (
-                    <tr
-                      key={ticket.id}
-                      className="transition-colors hover:bg-[#F8FAFB]"
-                    >
-                      <td className="whitespace-nowrap px-5 py-4 font-semibold text-[#526672]">
-                        #{ticket.id}
-                      </td>
-
-                      <td className="px-5 py-4">
-                        <Link
-                          href={`/admin/tickets/${ticket.id}`}
-                          className="font-semibold text-[#087F70] hover:underline"
-                        >
-                          {ticket.title}
-                        </Link>
-                      </td>
-
-                      <td className="px-5 py-4 text-[#405462]">
-                        {ticket.category}
-                      </td>
-
-                      <td className="px-5 py-4">
-                        <span
-                          className={`inline-flex whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${getPriorityClass(
-                            ticket.priority
-                          )}`}
-                        >
-                          {ticket.priority ?? "Not set"}
-                        </span>
-                      </td>
-
-                      <td className="px-5 py-4">
-                        <span
-                          className={`inline-flex whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${getStatusClass(
-                            ticket.status
-                          )}`}
-                        >
-                          {ticket.status}
-                        </span>
-                      </td>
-
-                      <td className="whitespace-nowrap px-5 py-4 text-[#526672]">
-                        {new Date(
-                          ticket.created_at
-                        ).toLocaleDateString()}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="flex flex-wrap gap-3">
+              {TICKET_STATUSES.map((status) => (
+                <label
+                  key={status}
+                  className="flex cursor-pointer items-center gap-2 rounded-xl border border-[#DCE6E9] bg-[#F8FAFB] px-4 py-3 text-sm text-[#405462]"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedStatuses.includes(status)}
+                    onChange={() => toggleStatus(status)}
+                    className="h-4 w-4 accent-[#087F70]"
+                  />
+                  {status}
+                </label>
+              ))}
             </div>
-          )}
+          </fieldset>
         </section>
+
+        <TicketList
+          key={queryKey}
+          statuses={selectedStatuses}
+          search={search}
+          sort={sort}
+          hasActiveFilters={hasActiveFilters}
+        />
       </div>
     </AppShell>
   );
+}
+
+export default function AdminTicketsPage() {
+  const router = useRouter();
+
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [isCheckingSession, setIsCheckingSession] =
+    useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+
+    async function checkAuthorization() {
+      try {
+        const session = await getSession();
+
+        if (!active) return;
+
+        if (!session.authenticated || !session.user) {
+          router.replace("/login");
+          return;
+        }
+
+        if (session.user.role !== "Administrator") {
+          router.replace("/dashboard");
+          return;
+        }
+
+        setIsAuthorized(true);
+      } catch {
+        if (active) {
+          setError("Unable to verify your session.");
+        }
+      } finally {
+        if (active) {
+          setIsCheckingSession(false);
+        }
+      }
+    }
+
+    void checkAuthorization();
+
+    return () => {
+      active = false;
+    };
+  }, [router]);
+
+  if (!isAuthorized) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#F4F7F8] px-5">
+        {error ? (
+          <p role="alert" className="text-sm text-[#B4233B]">
+            {error}
+          </p>
+        ) : (
+          <p role="status" className="text-sm text-[#405462]">
+            {isCheckingSession
+              ? "Checking session..."
+              : "Redirecting..."}
+          </p>
+        )}
+      </main>
+    );
+  }
+
+  return <AdminTicketsWorkspace />;
 }

@@ -648,3 +648,138 @@ Frontend improvements and regression testing: PASS within the documented test sc
 
 The redesigned frontend successfully completed all eight existing Cypress end-to-end tests, and the backend passed all 88 Jest unit tests. The Next.js production build also completed successfully. The frontend improvements are ready for final review and merging into the main branch before the postponed Week 6 Vercel deployment.
   
+
+
+
+
+
+## Week 9 - Filtering, Search, and Sorting
+
+### Features Implemented
+
+- F5.1 - Administrator filters support tickets by one or more statuses.
+- F5.2 - Administrator searches ticket titles using case-insensitive partial matching.
+- F5.3 - Administrator sorts tickets by creation date (newest or oldest first).
+- F5.4 - Administrator filters IT assets by assignment status (Assigned or Available).
+
+### Jest Unit Tests
+
+Command:
+
+`cd backend && npm test -- --runInBand`
+
+Results:
+
+- Test Suites: 13 passed, 13 total
+- Tests: 106 passed, 106 total
+- Failures: 0
+
+Week 9 tests completed:
+
+- Ticket query validation tests: PASS
+- Ticket status filtering validation: PASS
+- Ticket search and sorting validation: PASS
+- Asset assignment status filtering tests: PASS
+- Invalid filter values are rejected: PASS
+
+Regression testing:
+
+- All previous Jest tests continue to pass.
+
+### Postman API Tests
+
+Command:
+
+`postman collection run postman/authentication.postman_collection.json`
+
+Results:
+
+- Requests: 26 executed, 0 failed
+- Test Scripts: 26 executed, 0 failed
+- Prerequest Scripts: 2 executed, 0 failed
+- Assertions: 55 executed, 0 failed
+- Duration: approximately 9.8 seconds
+
+Week 9 API tests completed:
+
+- API-16 - Administrator filters tickets by Open and In Progress statuses (HTTP 200): PASS
+- API-17 - Administrator searches ticket titles case-insensitively and sorts results by creation date (HTTP 200): PASS
+- API-18 - Administrator filters assets by Assigned status (HTTP 200): PASS
+
+Regression testing:
+
+- Previous API-01 through API-15 tests continue to pass.
+
+### Cypress End-to-End Tests
+
+Command:
+
+`npx cypress run --browser chrome`
+
+Note: Administrator and employee test passwords were supplied using Cypress environment variables.
+
+Results:
+
+- Specs: 5 passed, 5 total
+- Tests: 11 passed, 11 total
+- Failures: 0
+- Browser: Chrome 156 (headless)
+- Duration: approximately 43 seconds
+
+Week 9 UI tests completed:
+
+- UI-11 - Administrator filters tickets by multiple statuses and clears filters: PASS
+- UI-12 - Administrator searches tickets using case-insensitive matching and sorts by creation date: PASS
+- UI-13 - Administrator filters assets by Assigned and Available status and clears the filter: PASS
+
+Regression testing:
+
+- UI-03 through UI-10 continue to pass.
+- Employee ticket creation and viewing: PASS
+- Administrator ticket management: PASS
+- Administrator asset creation: PASS
+- Asset assignment and employee assigned-asset viewing: PASS
+
+Testing observation:
+
+- The initial Week 9 Cypress run failed because the administrator password environment variable was missing.
+- After supplying the required test credentials, all three Week 9 tests passed.
+- The full Cypress regression suite also passed with zero failures.
+- No application code changes were required to resolve the environment configuration issue.
+
+### Manual Frontend Testing
+
+Ticket filtering:
+
+- Filter tickets by Open status: PASS
+- Filter tickets by Open and In Progress statuses: PASS
+- Search ticket titles using mixed-case text: PASS
+- Sort tickets by oldest creation date first: PASS
+
+Asset filtering:
+
+- Display all registered assets: PASS
+- Display only Available assets: PASS
+- Display only Assigned assets: PASS
+- Assignment status badges match the selected filter: PASS
+
+### Code Quality Checks
+
+- Backend TypeScript: PASS
+- Backend ESLint: PASS
+- Frontend TypeScript: PASS
+- Frontend ESLint: PASS
+- Backend Jest regression: PASS
+- Postman API regression: PASS
+- Cypress frontend regression: PASS
+- Postman collection JSON validation: PASS
+
+### Overall Result
+
+Week 9 automated testing: PASS within the documented test scope.
+
+All four Week 9 features have been implemented and verified through Jest unit tests, Postman API tests, Cypress end-to-end tests, and manual frontend testing.
+
+All 106 Jest tests, 55 Postman assertions, and 11 Cypress tests passed with zero failures.
+
+The Week 9 implementation is ready for final Git review and merging into the main branch.

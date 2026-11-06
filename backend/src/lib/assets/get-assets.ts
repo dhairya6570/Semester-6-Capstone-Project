@@ -1,7 +1,11 @@
+
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+export type AssetStatusFilter = "Assigned" | "Available";
+
 export async function getAssets(
-  supabase: SupabaseClient
+  supabase: SupabaseClient,
+  statusFilter?: AssetStatusFilter
 ) {
   const { data: assets, error } = await supabase
     .from("assets")
@@ -42,12 +46,20 @@ export async function getAssets(
       purchase_date: asset.purchase_date,
       created_at: asset.created_at,
       updated_at: asset.updated_at,
-      assignment_status: isAssigned ? "Assigned" : "Available",
+      assignment_status: isAssigned
+        ? ("Assigned" as const)
+        : ("Available" as const),
     };
   });
 
+  const filteredAssets = statusFilter
+    ? assetsWithStatus.filter(
+        (asset) => asset.assignment_status === statusFilter
+      )
+    : assetsWithStatus;
+
   return {
-    assets: assetsWithStatus,
+    assets: filteredAssets,
     error: null,
   };
 }

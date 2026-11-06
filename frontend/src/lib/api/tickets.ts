@@ -1,3 +1,4 @@
+
 import { API_URL } from "@/lib/api/config";
 
 export type TicketCategory =
@@ -46,8 +47,36 @@ export interface CreateTicketInput {
   priority: TicketPriority | null;
 }
 
-export async function getTickets(): Promise<Ticket[]> {
-  const response = await fetch(`${API_URL}/api/tickets`, {
+export interface TicketQueryOptions {
+  statuses?: TicketStatus[];
+  search?: string;
+  sort?: "asc" | "desc";
+}
+
+export async function getTickets(
+  options: TicketQueryOptions = {}
+): Promise<Ticket[]> {
+  const params = new URLSearchParams();
+
+  for (const status of options.statuses ?? []) {
+    params.append("status", status);
+  }
+
+  if (options.search?.trim()) {
+    params.set("search", options.search.trim());
+  }
+
+  if (options.sort) {
+    params.set("sort", options.sort);
+  }
+
+  const queryString = params.toString();
+
+  const url = `${API_URL}/api/tickets${
+    queryString ? `?${queryString}` : ""
+  }`;
+
+  const response = await fetch(url, {
     method: "GET",
     credentials: "include",
   });

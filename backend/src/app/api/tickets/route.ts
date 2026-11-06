@@ -1,11 +1,12 @@
+
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { validateCreateTicket } from "@/lib/validation/ticket";
+import { validateTicketQuery } from "@/lib/validation/ticket-query";
 import { createTicket } from "@/lib/tickets/create-ticket";
 import { getTickets } from "@/lib/tickets/get-tickets";
 
-
-export async function GET() {
+export async function GET(request: Request) {
   const supabase = await createSupabaseServerClient();
 
   const {
@@ -20,7 +21,20 @@ export async function GET() {
     );
   }
 
-  const { tickets, error } = await getTickets(supabase);
+  const { searchParams } = new URL(request.url);
+  const validation = validateTicketQuery(searchParams);
+
+  if (!validation.valid) {
+    return NextResponse.json(
+      { error: validation.error },
+      { status: 400 }
+    );
+  }
+
+  const { tickets, error } = await getTickets(
+    supabase,
+    validation.data
+  );
 
   if (error || !tickets) {
     return NextResponse.json(

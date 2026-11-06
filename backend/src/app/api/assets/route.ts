@@ -1,3 +1,4 @@
+
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isAdministrator } from "@/lib/auth/roles";
@@ -105,7 +106,7 @@ export async function POST(request: Request) {
   );
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   const supabase = await createSupabaseServerClient();
 
   const {
@@ -137,7 +138,25 @@ export async function GET() {
     );
   }
 
-  const { assets, error } = await getAssets(supabase);
+  // Week 9 - F5.4: Asset assignment status filtering
+  const { searchParams } = new URL(request.url);
+  const status = searchParams.get("status");
+
+  if (
+    status !== null &&
+    status !== "Assigned" &&
+    status !== "Available"
+  ) {
+    return NextResponse.json(
+      { error: "Invalid asset assignment status filter." },
+      { status: 400 }
+    );
+  }
+
+  const { assets, error } = await getAssets(
+    supabase,
+    status ?? undefined
+  );
 
   if (error) {
     return NextResponse.json(

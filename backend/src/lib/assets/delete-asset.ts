@@ -1,10 +1,11 @@
+
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { logServerError } from "@/lib/errors/logger";
 
 export async function deleteAsset(
   supabase: SupabaseClient,
   assetId: number
 ) {
-  // Check whether the asset exists.
   const { data: asset, error: assetError } = await supabase
     .from("assets")
     .select("id")
@@ -12,6 +13,11 @@ export async function deleteAsset(
     .maybeSingle();
 
   if (assetError) {
+    logServerError(assetError, {
+      route: "/api/assets/[id]",
+      operation: "DELETE_ASSET_LOOKUP",
+    });
+
     return { status: 500, error: "Asset could not be loaded." };
   }
 
@@ -19,17 +25,25 @@ export async function deleteAsset(
     return { status: 404, error: "Asset not found." };
   }
 
-  // Assigned assets cannot be deleted.
-  const { data: activeAssignment, error: assignmentError } = await supabase
-    .from("asset_assignments")
-    .select("id")
-    .eq("asset_id", assetId)
-    .is("returned_date", null)
-    .limit(1)
-    .maybeSingle();
+  const { data: activeAssignment, error: assignmentError } =
+    await supabase
+      .from("asset_assignments")
+      .select("id")
+      .eq("asset_id", assetId)
+      .is("returned_date", null)
+      .limit(1)
+      .maybeSingle();
 
   if (assignmentError) {
-    return { status: 500, error: "Asset assignment could not be checked." };
+    logServerError(assignmentError, {
+      route: "/api/assets/[id]",
+      operation: "DELETE_ASSIGNMENT_LOOKUP",
+    });
+
+    return {
+      status: 500,
+      error: "Asset assignment could not be checked.",
+    };
   }
 
   if (activeAssignment) {
@@ -39,7 +53,6 @@ export async function deleteAsset(
     };
   }
 
-  // Delete only the asset record.
   const { data: deletedAsset, error: deleteError } = await supabase
     .from("assets")
     .delete()
@@ -55,7 +68,15 @@ export async function deleteAsset(
       };
     }
 
-    return { status: 500, error: "Asset could not be deleted." };
+    logServerError(deleteError, {
+      route: "/api/assets/[id]",
+      operation: "DELETE",
+    });
+
+    return {
+      status: 500,
+      error: "Asset could not be deleted.",
+    };
   }
 
   if (!deletedAsset) {

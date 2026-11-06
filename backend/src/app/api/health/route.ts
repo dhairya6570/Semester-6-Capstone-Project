@@ -1,20 +1,28 @@
+
 import { NextResponse } from "next/server";
 import { createSupabaseClient } from "@/lib/supabase/client";
+import { logServerError } from "@/lib/errors/logger";
 
 export async function GET() {
   try {
     const supabase = createSupabaseClient();
+
     const { error } = await supabase
       .from("profiles")
       .select("id")
       .limit(1);
 
     if (error) {
+      logServerError(error, {
+        route: "/api/health",
+        operation: "GET",
+      });
+
       return NextResponse.json(
         {
           status: "error",
           database: "disconnected",
-          message: error.message,
+          message: "Service temporarily unavailable.",
         },
         { status: 500 }
       );
@@ -26,14 +34,16 @@ export async function GET() {
       message: "Backend successfully connected to Supabase.",
     });
   } catch (error) {
+    logServerError(error, {
+      route: "/api/health",
+      operation: "GET",
+    });
+
     return NextResponse.json(
       {
         status: "error",
         database: "disconnected",
-        message:
-          error instanceof Error
-            ? error.message
-            : "An unexpected error occurred.",
+        message: "Service temporarily unavailable.",
       },
       { status: 500 }
     );

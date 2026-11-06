@@ -967,6 +967,158 @@
           ]
         }
       }
+    },
+    {
+      "name": "API-16 - Filter Tickets by Multiple Statuses",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('API-16: returns HTTP 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('API-16: returns a tickets array', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.tickets).to.be.an('array');",
+              "});",
+              "",
+              "pm.test('API-16: returns only Open or In Progress tickets', function () {",
+              "    const json = pm.response.json();",
+              "    json.tickets.forEach(function (ticket) {",
+              "        pm.expect(['Open', 'In Progress']).to.include(ticket.status);",
+              "    });",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3001/api/tickets?status=Open&status=In%20Progress",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3001",
+          "path": ["api", "tickets"],
+          "query": [
+            {
+              "key": "status",
+              "value": "Open"
+            },
+            {
+              "key": "status",
+              "value": "In Progress"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "API-17 - Search Tickets and Sort Newest First",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('API-17: returns HTTP 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('API-17: returns a tickets array', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.tickets).to.be.an('array');",
+              "});",
+              "",
+              "pm.test('API-17: titles match search case-insensitively', function () {",
+              "    const json = pm.response.json();",
+              "    json.tickets.forEach(function (ticket) {",
+              "        pm.expect(ticket.title.toLowerCase()).to.include('cypress');",
+              "    });",
+              "});",
+              "",
+              "pm.test('API-17: tickets are sorted newest first', function () {",
+              "    const tickets = pm.response.json().tickets;",
+              "    for (let i = 1; i < tickets.length; i++) {",
+              "        const previous = new Date(tickets[i - 1].created_at).getTime();",
+              "        const current = new Date(tickets[i].created_at).getTime();",
+              "        pm.expect(previous).to.be.at.least(current);",
+              "    }",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3001/api/tickets?search=cYpReSs&sort=desc",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3001",
+          "path": ["api", "tickets"],
+          "query": [
+            {
+              "key": "search",
+              "value": "cYpReSs"
+            },
+            {
+              "key": "sort",
+              "value": "desc"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "API-18 - Filter Assets by Assignment Status",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('API-18: returns HTTP 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('API-18: returns an assets array', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.assets).to.be.an('array');",
+              "});",
+              "",
+              "pm.test('API-18: returns only assigned assets', function () {",
+              "    const json = pm.response.json();",
+              "    json.assets.forEach(function (asset) {",
+              "        pm.expect(asset.assignment_status).to.eql('Assigned');",
+              "    });",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3001/api/assets?status=Assigned",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3001",
+          "path": ["api", "assets"],
+          "query": [
+            {
+              "key": "status",
+              "value": "Assigned"
+            }
+          ]
+        }
+      }
     }
   ]
 }

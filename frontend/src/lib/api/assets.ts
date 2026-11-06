@@ -30,8 +30,22 @@ export interface UpdateAssetInput {
   purchaseDate: string | null;
 }
 
-export async function getAssets(): Promise<Asset[]> {
-  const response = await fetch(`${API_URL}/api/assets`, {
+export async function getAssets(
+  status?: AssetAssignmentStatus
+): Promise<Asset[]> {
+  const params = new URLSearchParams();
+
+  if (status) {
+    params.set("status", status);
+  }
+
+  const queryString = params.toString();
+
+  const url = `${API_URL}/api/assets${
+    queryString ? `?${queryString}` : ""
+  }`;
+
+  const response = await fetch(url, {
     method: "GET",
     credentials: "include",
   });

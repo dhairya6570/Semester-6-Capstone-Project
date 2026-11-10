@@ -1,5 +1,6 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { logServerError } from "@/lib/errors/logger";
 
 export interface AssignAssetResult {
   assignment: {
@@ -17,7 +18,6 @@ export async function assignAsset(
   assetId: number,
   userId: string
 ): Promise<AssignAssetResult> {
-  // Verify that the asset exists.
   const { data: asset, error: assetError } = await supabase
     .from("assets")
     .select("id")
@@ -25,6 +25,11 @@ export async function assignAsset(
     .maybeSingle();
 
   if (assetError) {
+    logServerError(assetError, {
+      route: "/api/assets/[id]/assign",
+      operation: "ASSET_LOOKUP",
+    });
+
     return {
       assignment: null,
       status: 500,
@@ -40,7 +45,6 @@ export async function assignAsset(
     };
   }
 
-  // Only Employee profiles are eligible for assignment.
   const { data: employee, error: employeeError } = await supabase
     .from("profiles")
     .select("id, role")
@@ -48,6 +52,11 @@ export async function assignAsset(
     .maybeSingle();
 
   if (employeeError) {
+    logServerError(employeeError, {
+      route: "/api/assets/[id]/assign",
+      operation: "EMPLOYEE_LOOKUP",
+    });
+
     return {
       assignment: null,
       status: 500,
@@ -63,7 +72,6 @@ export async function assignAsset(
     };
   }
 
-  // Check whether the asset is currently assigned.
   const { data: activeAssignment, error: assignmentError } =
     await supabase
       .from("asset_assignments")
@@ -74,6 +82,11 @@ export async function assignAsset(
       .maybeSingle();
 
   if (assignmentError) {
+    logServerError(assignmentError, {
+      route: "/api/assets/[id]/assign",
+      operation: "ASSIGNMENT_LOOKUP",
+    });
+
     return {
       assignment: null,
       status: 500,
@@ -89,7 +102,6 @@ export async function assignAsset(
     };
   }
 
-  // Create the active assignment record.
   const { data: assignment, error: insertError } = await supabase
     .from("asset_assignments")
     .insert({
@@ -100,8 +112,6 @@ export async function assignAsset(
     .single();
 
   if (insertError) {
-    // The database unique index also protects against
-    // simultaneous assignment requests.
     if (insertError.code === "23505") {
       return {
         assignment: null,
@@ -109,6 +119,11 @@ export async function assignAsset(
         error: "Asset is already assigned.",
       };
     }
+
+    logServerError(insertError, {
+      route: "/api/assets/[id]/assign",
+      operation: "ASSIGNMENT_INSERT",
+    });
 
     return {
       assignment: null,
@@ -118,6 +133,14 @@ export async function assignAsset(
   }
 
   if (!assignment) {
+    logServerError(
+      new Error("MissingAssignmentResult"),
+      {
+        route: "/api/assets/[id]/assign",
+        operation: "ASSIGNMENT_INSERT",
+      }
+    );
+
     return {
       assignment: null,
       status: 500,

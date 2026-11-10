@@ -5,6 +5,7 @@ import { isAdministrator } from "@/lib/auth/roles";
 import { validateCreateAsset } from "@/lib/validation/asset";
 import { createAsset } from "@/lib/assets/create-asset";
 import { getAssets } from "@/lib/assets/get-assets";
+import { logServerError } from "@/lib/errors/logger";
 
 export async function POST(request: Request) {
   const supabase = await createSupabaseServerClient();
@@ -27,11 +28,19 @@ export async function POST(request: Request) {
     .eq("id", user.id)
     .single();
 
-  if (
-    profileError ||
-    !profile ||
-    !isAdministrator(profile.role)
-  ) {
+  if (profileError) {
+    logServerError(profileError, {
+      route: "/api/assets",
+      operation: "POST_PROFILE_LOOKUP",
+    });
+
+    return NextResponse.json(
+      { error: "Unable to verify administrator access." },
+      { status: 500 }
+    );
+  }
+
+  if (!profile || !isAdministrator(profile.role)) {
     return NextResponse.json(
       { error: "Administrator access required." },
       { status: 403 }
@@ -76,34 +85,51 @@ export async function POST(request: Request) {
     );
   }
 
-  const { asset, error } = await createAsset(
-    supabase,
-    validation.data
-  );
+  try {
+    const { asset, error } = await createAsset(
+      supabase,
+      validation.data
+    );
 
-  if (error || !asset) {
-    if (
-      error?.code === "23505" &&
-      error.message.includes("serial_number")
-    ) {
+    if (error || !asset) {
+      if (
+        error?.code === "23505" &&
+        error.message.includes("serial_number")
+      ) {
+        return NextResponse.json(
+          {
+            error: "An asset with this serial number already exists.",
+          },
+          { status: 409 }
+        );
+      }
+
+      logServerError(error, {
+        route: "/api/assets",
+        operation: "POST",
+      });
+
       return NextResponse.json(
-        {
-          error: "An asset with this serial number already exists.",
-        },
-        { status: 409 }
+        { error: "Asset could not be created." },
+        { status: 500 }
       );
     }
+
+    return NextResponse.json(
+      { asset },
+      { status: 201 }
+    );
+  } catch (error) {
+    logServerError(error, {
+      route: "/api/assets",
+      operation: "POST",
+    });
 
     return NextResponse.json(
       { error: "Asset could not be created." },
       { status: 500 }
     );
   }
-
-  return NextResponse.json(
-    { asset },
-    { status: 201 }
-  );
 }
 
 export async function GET(request: Request) {
@@ -127,11 +153,19 @@ export async function GET(request: Request) {
     .eq("id", user.id)
     .single();
 
-  if (
-    profileError ||
-    !profile ||
-    !isAdministrator(profile.role)
-  ) {
+  if (profileError) {
+    logServerError(profileError, {
+      route: "/api/assets",
+      operation: "GET_PROFILE_LOOKUP",
+    });
+
+    return NextResponse.json(
+      { error: "Unable to verify administrator access." },
+      { status: 500 }
+    );
+  }
+
+  if (!profile || !isAdministrator(profile.role)) {
     return NextResponse.json(
       { error: "Administrator access required." },
       { status: 403 }
@@ -153,20 +187,37 @@ export async function GET(request: Request) {
     );
   }
 
-  const { assets, error } = await getAssets(
-    supabase,
-    status ?? undefined
-  );
+  try {
+    const { assets, error } = await getAssets(
+      supabase,
+      status ?? undefined
+    );
 
-  if (error) {
+    if (error) {
+      logServerError(error, {
+        route: "/api/assets",
+        operation: "GET",
+      });
+
+      return NextResponse.json(
+        { error: "Assets could not be retrieved." },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json(
+      { assets },
+      { status: 200 }
+    );
+  } catch (error) {
+    logServerError(error, {
+      route: "/api/assets",
+      operation: "GET",
+    });
+
     return NextResponse.json(
       { error: "Assets could not be retrieved." },
       { status: 500 }
     );
   }
-
-  return NextResponse.json(
-    { assets },
-    { status: 200 }
-  );
 }

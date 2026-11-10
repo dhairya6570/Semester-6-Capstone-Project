@@ -1,5 +1,6 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { logServerError } from "@/lib/errors/logger";
 
 export interface UnassignAssetResult {
   assignment: {
@@ -17,7 +18,6 @@ export async function unassignAsset(
   supabase: SupabaseClient,
   assetId: number
 ): Promise<UnassignAssetResult> {
-  // Verify that the asset exists.
   const { data: asset, error: assetError } = await supabase
     .from("assets")
     .select("id")
@@ -25,6 +25,11 @@ export async function unassignAsset(
     .maybeSingle();
 
   if (assetError) {
+    logServerError(assetError, {
+      route: "/api/assets/[id]/unassign",
+      operation: "ASSET_LOOKUP",
+    });
+
     return {
       assignment: null,
       status: 500,
@@ -40,7 +45,6 @@ export async function unassignAsset(
     };
   }
 
-  // Find the active assignment.
   const { data: activeAssignment, error: lookupError } =
     await supabase
       .from("asset_assignments")
@@ -50,6 +54,11 @@ export async function unassignAsset(
       .maybeSingle();
 
   if (lookupError) {
+    logServerError(lookupError, {
+      route: "/api/assets/[id]/unassign",
+      operation: "ASSIGNMENT_LOOKUP",
+    });
+
     return {
       assignment: null,
       status: 500,
@@ -65,10 +74,8 @@ export async function unassignAsset(
     };
   }
 
-  // Use today's date for the return.
   const returnedDate = new Date().toISOString().slice(0, 10);
 
-  // Close only the active assignment.
   const { data: assignment, error: updateError } =
     await supabase
       .from("asset_assignments")
@@ -83,6 +90,11 @@ export async function unassignAsset(
       .maybeSingle();
 
   if (updateError) {
+    logServerError(updateError, {
+      route: "/api/assets/[id]/unassign",
+      operation: "ASSIGNMENT_UPDATE",
+    });
+
     return {
       assignment: null,
       status: 500,
@@ -90,7 +102,6 @@ export async function unassignAsset(
     };
   }
 
-  // Another request may have returned the asset first.
   if (!assignment) {
     return {
       assignment: null,

@@ -943,3 +943,95 @@ The Week 10 security and error-logging improvements were verified through automa
 The application now includes structured server-side error logging and improved generic error responses in the updated API routes.
 
 Live API-19 testing, OWASP ZAP scanning, and independent verification of password hashing, session security configuration, and production log access restrictions were not performed and remain outside the verified testing scope.
+
+
+
+
+
+
+## Week 11 - Accessibility & Reliability
+
+### Accessibility Improvements
+
+Completed improvements:
+
+- Added a skip navigation link for keyboard users.
+- Improved mobile sidebar keyboard navigation and focus management.
+- Added Escape key support to close the mobile sidebar.
+- Improved Profile page badge contrast.
+
+### Lighthouse Accessibility Testing
+
+Tool: Google Chrome Lighthouse (Mobile)
+
+Results:
+
+- Administrator Dashboard: 100/100
+- Manage Tickets: 100/100
+- Manage Assets: 100/100
+- Profile: 100/100
+- Login: 100/100
+
+Milestone 4 tests completed:
+
+- ACC-01 through ACC-05 - Lighthouse accessibility audits: PASS
+- Profile page contrast issue fixed and retested: PASS
+
+### Manual Accessibility Testing
+
+Results:
+
+- Keyboard skip navigation and focus management: PASS
+- Mobile sidebar Escape key navigation: PASS
+- UI-15 - Mobile responsiveness at 375px: PASS (manual testing)
+- UI-16 - 200% browser zoom on five primary pages: PASS (manual testing)
+- Ticket and asset tables remained accessible through horizontal scrolling.
+
+Testing limitation:
+
+- UI-15 and UI-16 were verified manually, not through automated Cypress tests.
+- Lighthouse scores do not guarantee complete WCAG 2.1 AA compliance.
+
+### Postman API Tests
+
+Command:
+
+`postman collection run postman/authentication.postman_collection.json`
+
+Results:
+
+- Requests: 31 executed, 0 failed
+- Test Scripts: 26 executed, 0 failed
+- Prerequest Scripts: 2 executed, 0 failed
+- Assertions: 58 executed, 0 failed
+- Duration: approximately 6.6 seconds
+
+Week 11 test completed:
+
+- API-20 - Concurrent ticket status updates (HTTP 200): PASS
+- Final ticket status verification: PASS
+- Temporary test ticket cleanup: PASS
+
+Regression testing:
+
+- All previous Postman API tests continued to pass.
+
+Testing limitation:
+
+- The concurrency test does not guarantee which update wins or prevent conflicting updates.
+
+### Code Quality Checks
+
+- Frontend TypeScript: PASS
+- Postman collection JSON validation: PASS
+- Postman API regression: PASS
+- Lighthouse accessibility audits: PASS
+- Full Jest and Cypress regression suites: Not rerun during Week 11
+
+### Overall Result
+
+Week 11 accessibility and reliability testing: PASS within the documented test scope.
+
+All five Lighthouse accessibility audits achieved 100/100. Manual accessibility checks passed, and all 58 Postman assertions completed successfully with zero failures.
+
+Dedicated Cypress tests for UI-15 and UI-16 and full regression testing remain to be completed.

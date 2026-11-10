@@ -714,7 +714,7 @@ Regression testing:
 
 Command:
 
-`npx cypress run --browser chrome`
+`CYPRESS_adminPassword="Test@123" CYPRESS_employeePassword="Test@1234" npx cypress run --browser chrome`
 
 Note: Administrator and employee test passwords were supplied using Cypress environment variables.
 
@@ -783,3 +783,163 @@ All four Week 9 features have been implemented and verified through Jest unit te
 All 106 Jest tests, 55 Postman assertions, and 11 Cypress tests passed with zero failures.
 
 The Week 9 implementation is ready for final Git review and merging into the main branch.
+
+
+
+
+
+
+## Week 10 — Security & Error Logging
+
+### Testing Overview
+
+Week 10 focused on improving API error handling, adding structured server-side error logging, and preventing sensitive server information from being exposed through API responses.
+
+The existing authentication and session configuration was kept unchanged to avoid introducing regressions.
+
+### Jest Unit and Integration-Style Tests
+
+Command:
+
+`npm test -- --runInBand`
+
+Results:
+
+- Test Suites: 15 passed, 15 total
+- Tests: 114 passed, 114 total
+- Failures: 0
+
+Week 10 security tests included:
+
+- Verify server errors are logged with a timestamp, error level, error type, route, and operation.
+- Verify error logs do not expose sensitive error messages or stack traces.
+- Verify unknown errors are handled safely.
+- Verify ticket GET and POST handlers return generic HTTP 500 responses when simulated database failures or unexpected exceptions occur.
+- Verify internal error details are not exposed to API clients.
+
+Regression testing:
+
+- All previous Jest unit tests continued to pass.
+- Existing ticket and asset management functionality remained unaffected in the tested scenarios.
+- No authentication or session configuration changes were required.
+
+### Postman API Tests
+
+Command:
+
+`postman collection run postman/authentication.postman_collection.json`
+
+Results:
+
+- Requests: 26 executed, 0 failed
+- Test Scripts: 26 executed, 0 failed
+- Assertions: 55 executed, 0 failed
+- Duration: approximately 8.3 seconds
+
+Regression testing:
+
+- All existing API-01 through API-18 tests passed.
+- Authentication and user management APIs: PASS
+- Ticket creation, status updates, internal notes, and deletion: PASS
+- Asset creation, assignment, and unassignment: PASS
+- Ticket filtering, searching, and sorting: PASS
+- Asset filtering by assignment status: PASS
+
+API-19 — Generic HTTP 500 Error Response:
+
+- Generic HTTP 500 behavior was verified using Jest tests with simulated server failures.
+- A live HTTP 500 test was not executed through Postman CLI.
+- No temporary error-generating API endpoint was added to the application.
+- The existing Postman collection was kept unchanged.
+
+Testing observation:
+
+- Postman CLI displayed a warning because cloud authentication was not configured.
+- All local API tests completed successfully with zero failures.
+- Postman cloud login was not required for local testing.
+
+### Cypress End-to-End Tests
+
+Command:
+
+`CYPRESS_adminPassword="Test@123" CYPRESS_employeePassword="Test@1234" npx cypress run --browser chrome`
+
+Note: Administrator and employee test passwords were supplied using Cypress environment variables.
+
+Results:
+
+- Specs: 5 passed, 5 total
+- Tests: 11 passed, 11 total
+- Failures: 0
+- Browser: Chrome 157 (headless)
+- Duration: approximately 45 seconds
+
+Regression testing:
+
+- UI-03 — Employee submits a support ticket: PASS
+- UI-04 — Employee views ticket details: PASS
+- UI-05 — Administrator views employee tickets: PASS
+- UI-06 — Administrator updates ticket status: PASS
+- UI-07 — Internal notes are hidden from employees: PASS
+- UI-08 — Administrator creates an asset: PASS
+- UI-09 — Administrator assigns an asset: PASS
+- UI-10 — Employee views assigned assets: PASS
+- UI-11 — Administrator filters tickets by status: PASS
+- UI-12 — Administrator searches and sorts tickets: PASS
+- UI-13 — Administrator filters assets by assignment status: PASS
+
+Testing observation:
+
+- All five Cypress specifications passed successfully.
+- No existing frontend functionality failed during regression testing.
+- No frontend code changes were required to resolve test failures.
+
+### Security Verification
+
+Secure error handling:
+
+- Generic HTTP 500 responses: PASS in simulated Jest failure scenarios
+- Internal database error details excluded from tested API responses: PASS
+- Unexpected exceptions handled with generic responses in tested ticket routes: PASS
+
+Server-side error logging:
+
+- Structured error logging: PASS
+- Timestamp included in logs: PASS
+- Error level and error type included: PASS
+- Route and operation information included: PASS
+- Sensitive error messages excluded from tested logs: PASS
+- Stack traces excluded from tested logs: PASS
+
+Authentication and authorization:
+
+- Existing authentication API regression: PASS
+- Existing role-based API access regression: PASS
+- Password hashing: Managed by Supabase Auth; not independently verified during Week 10
+- Session security configuration: Not independently verified during Week 10
+
+Additional security testing:
+
+- OWASP ZAP automated scanning: Not executed
+- SQL injection vulnerability scanning: Not independently verified through OWASP ZAP
+- Cross-site scripting vulnerability scanning: Not independently verified through OWASP ZAP
+- Production log access restrictions: Not independently verified
+
+### Code Quality Checks
+
+- Backend Jest regression: PASS
+- Backend TypeScript: PASS
+- Postman API regression: PASS
+- Cypress frontend regression: PASS
+
+### Overall Result
+
+Week 10 automated testing: PASS within the documented test scope.
+
+All 114 Jest tests, 55 Postman assertions, and 11 Cypress tests passed with zero failures.
+
+The Week 10 security and error-logging improvements were verified through automated testing without introducing failures in the existing regression suites.
+
+The application now includes structured server-side error logging and improved generic error responses in the updated API routes.
+
+Live API-19 testing, OWASP ZAP scanning, and independent verification of password hashing, session security configuration, and production log access restrictions were not performed and remain outside the verified testing scope.

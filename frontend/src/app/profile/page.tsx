@@ -216,7 +216,7 @@ export default function ProfilePage() {
                 Account Role
               </dt>
               <dd className="mt-2">
-                <span className="inline-flex rounded-full bg-[#E4F4EF] px-3 py-1 text-sm font-semibold text-[#087F70]">
+                <span className="inline-flex rounded-full bg-[#E4F4EF] px-3 py-1 text-sm font-semibold text-[#006B57]">
                   {profile.role}
                 </span>
               </dd>

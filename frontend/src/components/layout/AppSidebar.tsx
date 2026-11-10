@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { logout } from "@/lib/api/auth";
@@ -102,6 +102,9 @@ export default function AppSidebar({ role }: AppSidebarProps) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState("");
 
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileNavigationRef = useRef<HTMLElement>(null);
+
   const navigation =
     role === "Administrator"
       ? adminNavigation
@@ -113,9 +116,11 @@ export default function AppSidebar({ role }: AppSidebarProps) {
     }
 
     if (href === "/tickets") {
-      return pathname === "/tickets" ||
+      return (
+        pathname === "/tickets" ||
         (pathname.startsWith("/tickets/") &&
-          !pathname.startsWith("/tickets/new"));
+          !pathname.startsWith("/tickets/new"))
+      );
     }
 
     if (href === "/tickets/new") {
@@ -124,6 +129,38 @@ export default function AppSidebar({ role }: AppSidebarProps) {
 
     return pathname === href || pathname.startsWith(`${href}/`);
   }
+
+  useEffect(() => {
+    if (!isMobileOpen) {
+      return;
+    }
+
+    const isMobile = window.matchMedia("(max-width: 1023px)").matches;
+
+    if (!isMobile) {
+      return;
+    }
+
+    const firstLink =
+      mobileNavigationRef.current?.querySelector<HTMLAnchorElement>(
+        "nav a"
+      );
+
+    firstLink?.focus();
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsMobileOpen(false);
+        menuButtonRef.current?.focus();
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isMobileOpen]);
 
   async function handleLogout() {
     setLogoutError("");
@@ -156,6 +193,7 @@ export default function AppSidebar({ role }: AppSidebarProps) {
         </Link>
 
         <button
+          ref={menuButtonRef}
           type="button"
           aria-label={
             isMobileOpen
@@ -164,7 +202,13 @@ export default function AppSidebar({ role }: AppSidebarProps) {
           }
           aria-expanded={isMobileOpen}
           aria-controls="mobile-navigation"
-          onClick={() => setIsMobileOpen(!isMobileOpen)}
+          onClick={() => {
+            if (isMobileOpen) {
+              setIsMobileOpen(false);
+            } else {
+              setIsMobileOpen(true);
+            }
+          }}
           className="rounded-lg border border-white/30 p-2 text-white"
         >
           {isMobileOpen ? (
@@ -194,6 +238,7 @@ export default function AppSidebar({ role }: AppSidebarProps) {
       </header>
 
       <aside
+        ref={mobileNavigationRef}
         id="mobile-navigation"
         className={`z-30 w-full bg-[#101F2B] text-white lg:fixed lg:inset-y-0 lg:left-0 lg:flex lg:w-64 lg:flex-col ${
           isMobileOpen ? "block" : "hidden lg:flex"

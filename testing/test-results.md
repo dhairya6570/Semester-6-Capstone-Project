@@ -1035,3 +1035,193 @@ Week 11 accessibility and reliability testing: PASS within the documented test s
 All five Lighthouse accessibility audits achieved 100/100. Manual accessibility checks passed, and all 58 Postman assertions completed successfully with zero failures.
 
 Dedicated Cypress tests for UI-15 and UI-16 and full regression testing remain to be completed.
+
+
+
+
+
+## Week 12 - Final Regression Testing & Performance Verification
+
+### Automated Unit Testing
+
+Tool: Jest
+
+Command:
+
+`cd backend && npm test -- --runInBand`
+
+Results:
+
+- Test suites: 15 passed, 0 failed
+- Tests: 114 passed, 0 failed
+- Existing validation and error-handling tests continued to pass.
+
+### Postman API Regression Testing
+
+Command:
+
+`postman collection run postman/authentication.postman_collection.json`
+
+Results:
+
+- Requests: 31 executed, 0 failed
+- Test scripts: 26 executed, 0 failed
+- Prerequest scripts: 2 executed, 0 failed
+- Assertions: 58 executed, 0 failed
+- Duration: approximately 29.5 seconds
+
+Verified functionality:
+
+- Employee and administrator authentication
+- User creation and duplicate email validation
+- Employee profile access and password updates
+- Support ticket creation and status updates
+- Internal ticket note access restrictions
+- Ticket deletion and verification
+- Asset creation, assignment, and unassignment
+- Assigned asset deletion restrictions
+- Ticket filtering, searching, and sorting
+- Concurrent ticket status updates
+
+All API regression tests passed successfully.
+
+### Cypress End-to-End Regression Testing
+
+Tool: Cypress 16.1.1 with Chrome 157 (headless)
+
+Command:
+
+`CYPRESS_adminPassword="Test@123" CYPRESS_employeePassword="Test@1234" npx cypress run --browser chrome`
+
+Results:
+
+- Specifications: 5 passed, 0 failed
+- Tests: 11 passed, 0 failed
+- Duration: approximately 48 seconds
+
+Verified functionality:
+
+- Administrator views employee support tickets
+- Administrator updates ticket status
+- Internal notes are restricted to administrators
+- Administrator creates and manages assets
+- Administrator assigns assets to employees
+- Employee views assigned assets
+- Ticket filtering by multiple statuses
+- Ticket searching and sorting
+- Asset filtering by assignment status
+- Employee creates support tickets
+- Employee views ticket details
+
+All existing Cypress regression tests passed.
+
+### TypeScript and Production Build Verification
+
+Results:
+
+- Frontend TypeScript validation: PASS
+- Backend TypeScript validation: PASS
+- Frontend production build: PASS
+- Backend production build: PASS
+
+Both applications compiled successfully without TypeScript errors.
+
+### Security and Reliability Verification
+
+Security-related functionality was verified through automated
+unit testing and API regression testing.
+
+Verified areas:
+
+- Valid and invalid authentication requests: PASS
+- Required credential validation: PASS
+- Administrator user management: PASS
+- Employee restrictions on internal ticket notes: PASS
+- Duplicate email validation: PASS
+- Asset assignment and deletion restrictions: PASS
+- Server-side error-handling regression tests: PASS
+- Concurrent ticket update reliability: PASS
+
+All completed security-related regression tests passed.
+
+The tested authentication, authorization, validation, and
+error-handling functionality behaved as expected.
+
+No failures were identified in the completed security-related
+regression tests.
+
+### Lighthouse Verification
+
+Tool: Google Chrome Lighthouse
+
+Environment:
+
+- Google Chrome DevTools
+- Local application
+
+Results:
+
+- Lighthouse audit completed manually.
+- Performance, accessibility, best practices, and SEO were reviewed.
+- Audit completion was confirmed.
+- Individual Week 12 category scores were not recorded.
+
+### UI-14 - Production Page Load Performance
+
+Environment:
+
+- Deployed Vercel application
+- Login page (/login)
+- Google Chrome DevTools Network panel
+- Browser cache disabled
+- No network throttling
+
+Requirement:
+
+- Page load time must be under 3 seconds.
+
+Results:
+
+- Run 1: 641 ms
+- Run 2: 388 ms
+- Run 3: 299 ms
+- Average load time: approximately 443 ms
+
+UI-14 Result: PASS
+
+The deployed login page loaded within the required time
+across all three measurements.
+
+### Final Regression Summary
+
+- Jest: 114 tests passed
+- Postman: 58 assertions passed
+- Cypress: 11 tests passed
+- Frontend TypeScript: PASS
+- Backend TypeScript: PASS
+- Frontend production build: PASS
+- Backend production build: PASS
+- Security-related regression testing: PASS
+- Lighthouse verification: Completed
+- UI-14 production login page performance: PASS
+
+### Overall Result
+
+Week 12 final regression and performance verification: PASS
+within the completed testing scope.
+
+All 114 Jest tests, 58 Postman assertions, and 11 Cypress tests
+passed with zero failures.
+
+Both frontend and backend TypeScript checks and production
+builds completed successfully.
+
+Security-related regression tests confirmed that the tested
+authentication, authorization, validation, and error-handling
+functionality behaved as expected.
+
+The deployed application login page also met the UI-14
+performance requirement across three measured runs.
+
+No application defects were identified during the completed
+Week 12 regression testing.
